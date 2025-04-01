@@ -1,4 +1,3 @@
-// src/app/login/login.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -111,8 +110,8 @@ export default function Login() {
       <div className="flex flex-col gap-0 items-start md:items-center justify-start self-stretch">
         <div className="bg-[#ffffff] flex flex-row gap-0 items-start md:items-center justify-start md:justify-center self-stretch">
           <Image
-            src="/mainImg.png"
-            alt="Books"
+            src="/assets/images/login-hero.png"
+            alt="Login Hero"
             width={480}
             height={320}
             className="w-full object-cover max-w-[480px]"
@@ -169,7 +168,7 @@ export default function Login() {
                 className="bg-[#ffffff] rounded-tr-xl rounded-br-xl border border-[#e8decf] border-l-0 pr-[15px] flex items-center justify-center h-14"
               >
                 <Image
-                  src={showPassword ? "/vector-01.svg" : "/vector-00.svg"}
+                  src={showPassword ? "/assets/icons/eye-on.svg" : "/assets/icons/eye-off.svg"}
                   alt={showPassword ? "Hide Password" : "Show Password"}
                   width={24}
                   height={24}
