@@ -1,21 +1,42 @@
-import Link from 'next/link';
+import React from "react";
+import Image from "next/image";
+import Link from "next/link";
 
-export default function NavigationBar() {
+interface NavigationBarProps {
+  currentPath?: string; // 선택적 prop으로 현재 경로를 받아 활성 상태 표시
+}
+
+const NavigationBar: React.FC<NavigationBarProps> = ({ currentPath = "" }) => {
+  const navItems = [
+    { path: "/", icon: "/assets/icons/home.svg", label: "홈" },
+    { path: "/records", icon: "/assets/icons/book.svg", label: "책꽃이" },
+    { path: "/profile", icon: "/assets/icons/profile.svg", label: "프로필" },
+  ];
+
   return (
-    <nav className="w-full border-b">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between">
-        <Link href="/" className="text-xl font-bold">
-          Book Shelf
+    <div className="bg-[#FFFFFF] border-t border-[#F5F2F0] pt-2 pb-3 flex flex-row items-center justify-around fixed bottom-0 w-full h-[60px]">
+      {navItems.map((item) => (
+        <Link href={item.path} key={item.path}>
+          <div className="flex flex-col items-center justify-center gap-1">
+            <Image
+              src={item.icon}
+              alt={`${item.label} Icon`}
+              width={24}
+              height={24}
+              className={currentPath === item.path ? "opacity-100" : "opacity-50"}
+            />
+            <span
+              className={`text-[#4A4A4A] font-['Pretendard'] text-xs leading-[18px] ${
+                currentPath === item.path ? "font-bold" : "font-normal"
+              }`}
+            >
+              {item.label}
+            </span>
+          </div>
         </Link>
-        <div className="flex gap-4">
-          <Link href="/login" className="hover:text-gray-600">
-            로그인
-          </Link>
-          <Link href="/register" className="hover:text-gray-600">
-            회원가입
-          </Link>
-        </div>
-      </div>
-    </nav>
+      ))}
+    </div>
   );
-} 
+};
+
+export default NavigationBar;

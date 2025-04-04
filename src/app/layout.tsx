@@ -14,14 +14,13 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
+        {/* Pretendard 폰트 CDN 추가 */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&family=Roboto:wght@400;500&display=swap"
+          href="https://cdn.jsdelivr.net/npm/pretendard@latest/dist/web/static/pretendard.css"
           rel="stylesheet"
         />
       </head>
-      <body className="font-['Plus_Jakarta_Sans'] antialiased">
-        {children}
-      </body>
+      <body className="font-pretendard">{children}</body>
     </html>
   );
 }
