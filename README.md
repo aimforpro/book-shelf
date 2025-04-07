@@ -55,3 +55,7 @@ src/
 - `NEXT_PUBLIC_SUPABASE_URL`: Supabase 프로젝트 URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Supabase Anonymous Key
 - `NEXT_PUBLIC_SENTRY_DSN`: Sentry DSN 
+
+### 로컬 DB 백업 및 복원
+- 백업: `supabase db dump > dump.sql`
+- 복원: `psql -U postgres -h localhost -p 54322 -d postgres < dump.sql`

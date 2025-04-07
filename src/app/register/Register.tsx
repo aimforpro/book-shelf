@@ -1,7 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
+import { useSearchParams, useRouter } from "next/navigation";
 import NavigationBar from "@/components/layout/NavigationBar";
 
 interface BookInfo {
@@ -9,48 +10,88 @@ interface BookInfo {
   authors: string;
   description: string;
   publisher: string;
-  pages: number;
+  isbn: string; // ISBN으로 변경
   publicationDate: string;
   price: number;
+  image: string;
 }
 
 const Register: React.FC = () => {
-  // 더미 데이터
-  const bookInfo: BookInfo = {
-    title: "그시절우리가 좋아했던 소녀 메이킹",
-    authors: "조영명, 김재원, 김세랑",
-    description:
-      "올바른 맞춤법과 외래어 표기법을 알려주고, 케케묵은 표현이나 낮선 외래어를 다듬어 쓸 수 있는 순화어를 제안한다. 또한 일상적으로 잘못 발음하는 말이 트린 표기로 이어지는 사례들도 짚는다.ㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇㅇ",
-    publisher: "박연희",
-    pages: 296,
-    publicationDate: "2025-01-13",
-    price: 18000,
-  };
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const [bookInfo, setBookInfo] = useState<BookInfo | null>(null);
+
+  useEffect(() => {
+    const title = searchParams.get("title") || "";
+    const authors = searchParams.get("author") || "";
+    const publisher = searchParams.get("publisher") || "";
+    const image = searchParams.get("image") || "/assets/images/book-cover-0.png";
+    const description = searchParams.get("description") || "책 소개가 없습니다.";
+    const pubdate = searchParams.get("pubdate") || "발행일 정보 없음";
+    const discount = searchParams.get("discount") || "0";
+    const isbn = searchParams.get("isbn") || "ISBN 정보 없음";
+
+    const formattedPubdate =
+      pubdate.length === 8
+        ? `${pubdate.slice(0, 4)}-${pubdate.slice(4, 6)}-${pubdate.slice(6, 8)}`
+        : pubdate;
+
+    const bookData: BookInfo = {
+      title,
+      authors,
+      description,
+      publisher,
+      isbn, // ISBN으로 변경
+      publicationDate: formattedPubdate,
+      price: parseInt(discount) || 0,
+      image,
+    };
+
+    setBookInfo(bookData);
+  }, [searchParams]);
 
   const handleRegister = () => {
-    // 등록 버튼 클릭 시 동작 (예: API 호출)
-    console.log("등록 버튼 클릭됨:", bookInfo);
+    if (bookInfo) {
+      console.log("등록 버튼 클릭됨:", bookInfo);
+    }
   };
+
+  const handleBack = () => {
+    router.back();
+  };
+
+  if (!bookInfo) {
+    return <div>로딩 중...</div>;
+  }
 
   return (
     <div className="bg-[#FFFFFF] flex flex-col items-start justify-start min-h-screen">
       <div className="flex flex-col gap-0 items-start justify-start w-full min-h-screen relative overflow-auto">
         {/* 헤더 */}
         <div className="bg-[#FFFFFF] pt-4 px-4 pb-2 flex flex-row items-center justify-between w-full h-[72px]">
+          <button onClick={handleBack} className="flex items-center">
+            <Image
+              src="/assets/icons/back-arrow.svg"
+              alt="Back"
+              width={24}
+              height={24}
+            />
+          </button>
           <h1 className="text-[#4A4A4A] text-left font-['Pretendard'] text-lg font-bold">
             등록
           </h1>
+          <div className="w-6" />
         </div>
 
         {/* 책 정보 섹션 */}
         <div className="flex flex-col gap-3 items-start justify-start w-full min-w-[360px] max-w-[414px] mx-auto">
           <div className="bg-[#F9F9F9] rounded-lg flex flex-col gap-4 items-center justify-start w-full p-4 shadow-sm">
-            <h2 className="text-[#4A4A4A] text-center font-['Pretendard'] text-[24px] leading-7 font-semibold w-[341px] max-w-[90%]">
+            <h2 className="text-[#4A4A4A] text-center font-['Pretendard'] text-[20px] leading-6 font-semibold w-[341px] max-w-[90%]">
               {bookInfo.title}
             </h2>
             <Image
-              src="/assets/images/book-cover-0.png"
-              alt="Book Cover"
+              src={bookInfo.image}
+              alt={bookInfo.title}
               width={176}
               height={234}
               className="rounded-xl object-cover shadow-md"
@@ -85,7 +126,7 @@ const Register: React.FC = () => {
                   도서명
                 </span>
                 <span className="text-[#666666] font-['Pretendard'] text-sm leading-[24px] font-normal flex-1">
-                  신뢰와 호감을 높이는 언어생활을 위한
+                  {bookInfo.title}
                 </span>
               </div>
               {/* 저자 */}
@@ -106,13 +147,13 @@ const Register: React.FC = () => {
                   {bookInfo.publisher}
                 </span>
               </div>
-              {/* 페이지 */}
+              {/* ISBN */}
               <div className="flex flex-row items-center justify-start w-full bg-[#F9F9F9] rounded-lg p-3 shadow-sm">
                 <span className="text-[#4A4A4A] font-['Pretendard'] text-sm leading-[24px] font-medium w-20">
-                  페이지
+                  ISBN
                 </span>
                 <span className="text-[#666666] font-['Pretendard'] text-sm leading-[24px] font-normal flex-1">
-                  {bookInfo.pages}쪽
+                  {bookInfo.isbn}
                 </span>
               </div>
               {/* 발행일 */}
@@ -153,7 +194,6 @@ const Register: React.FC = () => {
         <div className="bg-[#FFFFFF] w-full h-[80px]" />
       </div>
 
-      {/* 하단 네비게이션 */}
       <NavigationBar currentPath="/register" />
     </div>
   );

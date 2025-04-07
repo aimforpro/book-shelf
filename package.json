@@ -10,7 +10,9 @@
   },
   "dependencies": {
     "@geist-ui/core": "^2.3.8",
+    "@modelcontextprotocol/sdk": "^1.8.0",
     "@radix-ui/react-slot": "^1.0.2",
+    "@smithery/sdk": "^1.0.4",
     "@supabase/supabase-js": "^2.39.3",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
