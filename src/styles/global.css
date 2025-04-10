@@ -16,6 +16,10 @@
   100% { transform: translate(0, 0) rotate(0deg); }
 }
 
+.animate-shake {
+  animation: shake 0.5s infinite; /* 지속 시간과 반복 설정 */
+}
+
 @layer components {
   .custom-calendar {
     @apply border-none bg-white-bg font-pretendard text-text-primary w-full max-w-[300px] mx-auto;

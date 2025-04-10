@@ -84,10 +84,15 @@ const Signup: React.FC = () => {
     if (!validateForm()) return;
 
     try {
-      const { data, error } = await supabase.auth.signUp({ email: "test6@example.com",
-        password: "password123", });
-      console.log('Data:', data);
-      console.error('Error:', error);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            name: email.split('@')[0], // 기본 이름 설정
+          },
+        },
+      });
 
       if (error) {
         console.error('Signup error:', error);
@@ -100,10 +105,17 @@ const Signup: React.FC = () => {
         return;
       }
 
-      if (data.user) {
-        setModalMessage("회원가입이 완료되었습니다. 이메일 인증 후 로그인해주세요.");
+      // 회원가입 성공 시 (이메일 인증 비활성화 상태에서는 세션이 바로 생성됨)
+      if (data.session) {
+        setModalMessage("회원가입 및 로그인이 완료되었습니다.");
         setIsModalOpen(true);
-        router.push('/login');
+        setTimeout(() => {
+          router.push('/main'); // main 페이지로 이동
+        }, 1000); // 모달을 잠깐 보여주고 이동
+      } else {
+        console.error("세션이 생성되지 않았습니다. Supabase 설정을 확인하세요.");
+        setModalMessage("회원가입은 완료되었으나 로그인에 실패했습니다. 다시 시도해주세요.");
+        setIsModalOpen(true);
       }
     } catch (err) {
       console.error("Signup error:", err);
@@ -117,10 +129,10 @@ const Signup: React.FC = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
-      if (error) throw error;
+      if (error) throw ecologicallyerror;
     } catch (error) {
       console.error('Google 로그인 오류:', error);
     }
@@ -129,7 +141,6 @@ const Signup: React.FC = () => {
   const closeModal = () => {
     setIsModalOpen(false);
     setModalMessage("");
-    // 중복 시 자동 이동 없음. 고객 선택에 맡김
   };
 
   return (

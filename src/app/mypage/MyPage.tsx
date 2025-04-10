@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react"; // useEffect 추가
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
 import NavigationBar from "@/components/layout/NavigationBar";
 import { useAuth } from "@/hooks/useAuth";
@@ -17,12 +17,13 @@ const MyPage: React.FC = () => {
   const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState<boolean>(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState<boolean>(false);
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState<boolean>(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState<boolean>(false);
   const [supportMessage, setSupportMessage] = useState<string>("");
   const [contactInfo, setContactInfo] = useState<string>("");
   const [isAlertModalOpen, setIsAlertModalOpen] = useState<boolean>(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState<boolean>(false);
 
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, deleteUser } = useAuth();
   const router = useRouter();
 
   const colorOptions = [
@@ -81,12 +82,24 @@ const MyPage: React.FC = () => {
       const { error } = await supabase.auth.signOut();
       document.cookie = "sb-access-token=; Max-Age=0; path=/;";
       if (error) throw error;
-      router.push("/login"); // 로그아웃 후 바로 로그인 페이지로 이동
+      router.push("/login");
     } catch (error) {
       console.error("로그아웃 실패:", error);
       alert("로그아웃에 실패했습니다. 다시 시도해주세요.");
     } finally {
-      setIsLogoutModalOpen(false); // 모달 닫기
+      setIsLogoutModalOpen(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      await deleteUser(); // useAuth에서 제공하는 deleteUser 호출
+    } catch (error) {
+      console.error("계정 삭제 실패:", error);
+      alert("계정 삭제에 실패했습니다. 다시 시도해주세요.");
+    } finally {
+      setIsDeleteModalOpen(false);
+      setIsProfileModalOpen(false);
     }
   };
 
@@ -98,20 +111,16 @@ const MyPage: React.FC = () => {
   const toggleLogoutModal = () => setIsLogoutModalOpen(!isLogoutModalOpen);
   const toggleAlertModal = () => setIsAlertModalOpen(!isAlertModalOpen);
   const toggleSuccessModal = () => setIsSuccessModalOpen(!isSuccessModalOpen);
+  const toggleDeleteModal = () => setIsDeleteModalOpen(!isDeleteModalOpen);
 
-  // 인증 상태 체크 및 리다이렉트
   useEffect(() => {
     if (!authLoading && !user) {
-      router.push("/login"); // 로그인되지 않은 경우 바로 로그인 페이지로 이동
+      router.push("/login");
     }
   }, [user, authLoading, router]);
 
   if (authLoading) return <div className="text-center mt-10">로딩 중...</div>;
-
-  // 인증되지 않은 경우를 추가적으로 체크 (useEffect와 중복 방지)
-  if (!user) {
-    return null; // useEffect에서 이미 리다이렉트 처리하므로 여기서는 렌더링 중단
-  }
+  if (!user) return null;
 
   return (
     <div className="flex flex-col items-start justify-start min-h-screen" style={{ backgroundColor }}>
@@ -145,7 +154,7 @@ const MyPage: React.FC = () => {
               </div>
             </div>
           </div>
-         */}
+          */}
           {isBackgroundModalOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white rounded-lg p-6 w-[90%] max-w-[350px] flex flex-col gap-4">
@@ -202,6 +211,12 @@ const MyPage: React.FC = () => {
                   <p className="text-[#1C2526] text-base font-['Pretendard'] font-medium">
                     이름: {user?.user_metadata?.name || "정보 없음"}
                   </p>
+                  <button
+                    onClick={toggleDeleteModal}
+                    className="bg-[#FF6B6B] text-white text-base font-['Pretendard'] font-medium px-4 py-2 rounded-lg hover:bg-[#e65c5c] transition-colors mt-2"
+                  >
+                    탈퇴하기
+                  </button>
                 </div>
                 <button
                   onClick={toggleProfileModal}
@@ -209,6 +224,31 @@ const MyPage: React.FC = () => {
                 >
                   닫기
                 </button>
+              </div>
+            </div>
+          )}
+
+          {isDeleteModalOpen && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg p-6 w-[90%] max-w-[350px] flex flex-col gap-4">
+                <h3 className="text-[#1C2526] text-lg font-['Pretendard'] font-semibold">계정 탈퇴</h3>
+                <p className="text-[#1C2526] text-base font-['Pretendard'] font-normal">
+                  계정을 탈퇴하면 모든 정보가 삭제되며 복구할 수 없습니다. 정말 탈퇴하시겠습니까?
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleDeleteAccount}
+                    className="bg-[#FF6B6B] text-white text-base font-['Pretendard'] font-medium px-4 py-2 rounded-lg hover:bg-[#e65c5c] transition-colors flex-1"
+                  >
+                    확인
+                  </button>
+                  <button
+                    onClick={toggleDeleteModal}
+                    className="bg-[#E0E0E0] text-[#1C2526] text-base font-['Pretendard'] font-medium px-4 py-2 rounded-lg hover:bg-[#D0D0D0] transition-colors flex-1"
+                  >
+                    취소
+                  </button>
+                </div>
               </div>
             </div>
           )}

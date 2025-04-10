@@ -96,7 +96,7 @@ export default function Login() {
       if (authId) {
         await upsertUser(authId, email);
       }
-      router.push("/records");
+      router.push("/main");
     }
   };
 

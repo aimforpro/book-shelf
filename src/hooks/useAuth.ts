@@ -57,5 +57,36 @@ export const useAuth = () => {
     return () => authListener.subscription.unsubscribe();
   }, [router]);
 
-  return { user, loading };
+  // 계정 삭제 함수 추가
+  const deleteUser = async () => {
+    try {
+      if (!user?.id) throw new Error("No user ID available");
+  
+      const { data: sessionData } = await supabase.auth.getSession();
+      const token = sessionData.session?.access_token;
+  
+      const response = await fetch('/api/delete-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete user');
+      }
+  
+      await supabase.auth.signOut();
+      document.cookie = "sb-access-token=; Max-Age=0; path=/;";
+      router.push("/login");
+    } catch (error) {
+      console.error("계정 삭제 실패:", error);
+      throw error;
+    } 
+  };
+
+  return { user, loading, deleteUser };
 };
