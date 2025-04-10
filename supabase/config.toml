@@ -129,8 +129,8 @@ password_requirements = ""
 
 [auth.external.google]
 enabled = true
-client_id = "262705872569-ah8m1m4mqcfdgl262ljhf0qt4bqqrbqs.apps.googleusercontent.com"
-secret = "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"
+client_id = "${GOOGLE_OAUTH_CLIENT_ID}"
+secret = "${GOOGLE_OAUTH_CLIENT_SECRET}"
 redirect_uri = "http://localhost:54321/auth/v1/callback"
 
 [auth.rate_limit]
