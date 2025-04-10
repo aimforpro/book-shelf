@@ -151,7 +151,7 @@ const Signup: React.FC = () => {
         <div className="flex flex-col gap-0 items-start justify-start w-full">
           {/* 뒤로가기 버튼 */}
           <div className="bg-[#FFFFFF] pt-4 px-4 pb-2 flex flex-row items-center justify-between w-full">
-            <Link href="/">
+            <Link href="/login">
               <div className="w-12 h-12 flex items-center justify-start">
                 <Image
                   src="/assets/icons/back-arrow.svg"

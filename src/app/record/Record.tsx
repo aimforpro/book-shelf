@@ -32,7 +32,7 @@ const Record: React.FC = () => {
     book_id: 0,
     title: "",
     authors: "",
-    cover_url: "/assets/images/book-cover-1.png",
+    cover_url: "",
     startDate: null,
     endDate: null,
     progress: 0,
@@ -117,7 +117,7 @@ const Record: React.FC = () => {
         startDate: readingRecord.start_date || null,
         endDate: readingRecord.end_date || null,
         progress: readingRecord.progress ?? 0,
-        rating: readingRecord.rating ?? 0,
+        rating: Math.min(Math.max(readingRecord.rating ?? 0, 0), 5),
         memo: readingRecord.memo || "",
         isShared: sharedMemo.is_visible === "y",
       });
@@ -142,6 +142,9 @@ const Record: React.FC = () => {
       showModal("시작일은 종료일보다 늦을 수 없습니다.", "error");
       return;
     }
+
+    // rating 값을 0~5로 제한
+    const clampedRating = Math.max(0, Math.min(bookProgress.rating, 5));
 
     try {
       const { data: userData } = await supabase
@@ -269,7 +272,9 @@ const Record: React.FC = () => {
     const ratingValue = (position / starWidth) * 5;
     const roundedRating = Math.round(ratingValue);
 
-    setBookProgress({ ...bookProgress, rating: roundedRating });
+    // 0~5 범위로 제한
+    const clampedRating = Math.max(0, Math.min(roundedRating, 5));
+    setBookProgress({ ...bookProgress, rating: clampedRating });
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -374,15 +379,21 @@ const Record: React.FC = () => {
     "💡",
   ];
 
-  if (authLoading) return <div className="text-center mt-10">로딩 중...</div>;
+  if (authLoading || loading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="text-center text-text-primary text-lg">로딩 중...</div>
+      </div>
+    );
+  }
 
   if (!user) {
     router.push("/unauthenticated");
-    return null; 
+    return null;
   }
 
   return (
-    <div className="bg-primary-bg flex flex-col items-start justify-start min-h-screen font-pretendard">
+    <div className="bg-white-bg flex flex-col items-start justify-start min-h-screen font-pretendard">
       <div className="flex flex-col gap-0 items-start justify-start w-full min-h-screen relative overflow-auto">
         <div className="bg-white-bg pt-4 px-4 pb-2 flex flex-row items-center justify-between w-full h-[72px]">
           <button onClick={() => router.back()}>
@@ -400,14 +411,16 @@ const Record: React.FC = () => {
             <h2 className="text-text-primary text-center text-[24px] leading-7 font-medium w-[341px] max-w-[90%]">
               {bookProgress.title}
             </h2>
-            <Image
-              src={bookProgress.cover_url}
-              alt="Book Cover"
-              width={176}
-              height={234}
-              className="rounded-xl object-cover shadow-md"
-              priority // LCP 경고 해결
-            />
+            {bookProgress.cover_url && (
+              <Image
+                src={bookProgress.cover_url}
+                alt="Book Cover"
+                width={176}
+                height={234}
+                className="rounded-xl object-cover shadow-md"
+                priority
+              />
+            )}
             <p className="text-text-secondary text-center text-sm leading-6 font-normal w-[157px]">
               {bookProgress.authors}
             </p>

@@ -5,8 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/ts/supabase";
 import Image from "next/image";
 import Link from "next/link";
-import TermsOfServiceModal from "@/app/mypage/TermsOfServiceModal"; // 추가
-import PrivacyPolicyModal from "@/app/mypage/PrivacyPolicyModal"; // 추가
+import TermsOfServiceModal from "@/app/mypage/TermsOfServiceModal";
+import PrivacyPolicyModal from "@/app/mypage/PrivacyPolicyModal";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,11 +19,10 @@ export default function Login() {
   const [passwordError, setPasswordError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
-  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false); // 추가: 이용약관 모달 상태
-  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false); // 추가: 개인정보처리방침 모달 상태
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const router = useRouter();
 
-  // 기기 감지
   useEffect(() => {
     const userAgent = navigator.userAgent || navigator.vendor || (window as any).opera;
     if (/android/i.test(userAgent)) {
@@ -78,19 +77,16 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
-    // validateForm 실패 시 모달 띄우지 않음, 기존 에러 메시지만 표시
     if (!validateForm()) {
       return;
     }
 
-    // 약관 미동의 시 모달 띄움
     if (!agree) {
       setModalMessage("약관에 동의해주세요.");
       setIsModalOpen(true);
       return;
     }
 
-    // Supabase 인증 시도
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       setModalMessage("이메일 또는 비밀번호가 잘못되었습니다.");
@@ -147,7 +143,6 @@ export default function Login() {
     setModalMessage("");
   };
 
-  // 모달 토글 함수 추가
   const toggleTermsModal = () => {
     console.log("이용약관 모달 토글 호출");
     setIsTermsModalOpen(!isTermsModalOpen);
@@ -168,6 +163,7 @@ export default function Login() {
             width={480}
             height={320}
             className="w-full object-cover max-w-[480px]"
+            priority // LCP 경고 해결을 위한 priority 추가
           />
         </div>
 
@@ -274,13 +270,13 @@ export default function Login() {
             >
               <Image
                 src="/google.png"
-                alt="Google 로고"
+                alt="Google 로고" 
                 width={18}
                 height={18}
                 className="w-[18px] h-[18px]"
               />
-              <span className="text-[#3c4043] font-['Roboto'] text-[14px] font-medium">
-                Google 계정으로 로그인
+              <span className="text-gray-700 font-['Roboto'] text-[14px] font-medium">
+                구글 계정으로 로그인
               </span>
             </button>
           </div>
@@ -357,7 +353,6 @@ export default function Login() {
         </div>
       )}
 
-      {/* 모달 렌더링 추가 */}
       {isTermsModalOpen && <TermsOfServiceModal onClose={toggleTermsModal} />}
       {isPrivacyModalOpen && <PrivacyPolicyModal onClose={togglePrivacyModal} />}
     </main>

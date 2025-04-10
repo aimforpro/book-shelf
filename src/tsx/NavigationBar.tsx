@@ -9,7 +9,6 @@ interface NavigationBarProps {
 const NavigationBar: React.FC<NavigationBarProps> = ({ currentPath = "" }) => {
   const pathname = usePathname();
   const activePath = currentPath || pathname || "";
-  console.log("Active Path:", activePath);
 
   const navItems = [
     { path: "/main", iconOff: "/assets/icons/home-off.svg", iconOn: "/assets/icons/home-on.svg", label: "홈" },
