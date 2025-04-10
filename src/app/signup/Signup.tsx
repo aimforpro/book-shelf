@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { supabase } from "@/api/supabase";
+import { supabase } from "@/ts/supabase";
 
 const Signup: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -132,9 +132,11 @@ const Signup: React.FC = () => {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-      if (error) throw ecologicallyerror;
+      if (error) throw error; 
     } catch (error) {
       console.error('Google 로그인 오류:', error);
+      setModalMessage("Google 로그인 중 오류가 발생했습니다. 다시 시도해주세요.");
+      setIsModalOpen(true);
     }
   };
 

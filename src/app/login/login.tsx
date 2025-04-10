@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/ts/supabase";
 import Image from "next/image";
 import Link from "next/link";
+import TermsOfServiceModal from "@/app/mypage/TermsOfServiceModal"; // 추가
+import PrivacyPolicyModal from "@/app/mypage/PrivacyPolicyModal"; // 추가
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -17,6 +19,8 @@ export default function Login() {
   const [passwordError, setPasswordError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
+  const [isTermsModalOpen, setIsTermsModalOpen] = useState(false); // 추가: 이용약관 모달 상태
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false); // 추가: 개인정보처리방침 모달 상태
   const router = useRouter();
 
   // 기기 감지
@@ -141,6 +145,17 @@ export default function Login() {
   const closeModal = () => {
     setIsModalOpen(false);
     setModalMessage("");
+  };
+
+  // 모달 토글 함수 추가
+  const toggleTermsModal = () => {
+    console.log("이용약관 모달 토글 호출");
+    setIsTermsModalOpen(!isTermsModalOpen);
+  };
+
+  const togglePrivacyModal = () => {
+    console.log("개인정보처리방침 모달 토글 호출");
+    setIsPrivacyModalOpen(!isPrivacyModalOpen);
   };
 
   return (
@@ -272,7 +287,7 @@ export default function Login() {
         )}
 
         {isIOS && (
-          <div className="pt-3 pr-4 pb-3 pl-4 flex flex-row gap-0 items-start md:items-center justify-start md:justify-center flex-wrap w-full max-w-[480px]">
+          <div className="pt-3 pr-4 pb-3 pl-4 flex flex-row gap-0 items-start md:items-center justify-start md:items-center justify-start md:justify-center flex-wrap w-full max-w-[480px]">
             <button
               onClick={handleAppleLogin}
               className="bg-black hover:bg-gray-900 rounded-lg px-5 flex flex-row gap-3 items-center justify-center w-full h-12 min-w-[160px] max-w-[480px] border border-transparent shadow-sm"
@@ -312,13 +327,13 @@ export default function Login() {
             />
             <div className="flex-1 min-w-[200px]">
               <div className="text-[#1c170d] text-left md:text-center font-['PlusJakartaSans-Regular'] text-base leading-6 font-normal">
-                <Link href="/terms-of-service" className="underline">
+                <button onClick={toggleTermsModal} className="underline">
                   서비스이용약관
-                </Link>{" "}
+                </button>{" "}
                 및{" "}
-                <Link href="/privacy-policy" className="underline">
+                <button onClick={togglePrivacyModal} className="underline">
                   개인정보처리방침
-                </Link>
+                </button>
                 에 동의합니다.
               </div>
             </div>
@@ -341,6 +356,10 @@ export default function Login() {
           </div>
         </div>
       )}
+
+      {/* 모달 렌더링 추가 */}
+      {isTermsModalOpen && <TermsOfServiceModal onClose={toggleTermsModal} />}
+      {isPrivacyModalOpen && <PrivacyPolicyModal onClose={togglePrivacyModal} />}
     </main>
   );
 }

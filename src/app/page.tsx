@@ -14,7 +14,7 @@ export default function Splash() {
   }, [router]);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[844px] bg-primary-bg">
+    <div className="flex flex-col items-center justify-center pt-5 min-h-[844px] bg-primary-bg">
       {/* 앱 이름 */}
       <h1 className="font-pretendard text-[72px] font-medium text-progress-fill mb-4">
         책꽃이

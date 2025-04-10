@@ -1,14 +1,14 @@
 // src/app/signup/page.tsx
 import Signup from "./Signup";  
-import { supabase } from "@/api/supabase";
+import { supabase } from "@/ts/supabase";
 
 const handleGoogleSignIn = async () => {
   try {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`
-      }
+        redirectTo: `${window.location.origin}/auth/callback`,
+      },
     });
     if (error) throw error;
   } catch (error) {
@@ -16,6 +16,6 @@ const handleGoogleSignIn = async () => {
   }
 };
 
-export default function Page() {
+export default function SignupPage() {
   return <Signup />;
 }
