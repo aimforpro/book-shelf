@@ -10,12 +10,13 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [agree, setAgree] = useState(true); // 기본 체크
+  const [agree, setAgree] = useState(true);
   const [isAndroid, setIsAndroid] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [showAgreePopup, setShowAgreePopup] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
   const router = useRouter();
 
   // 기기 감지
@@ -27,14 +28,6 @@ export default function Login() {
       setIsIOS(true);
     }
   }, []);
-
-  // 팝업 5초 후 자동 닫기
-  useEffect(() => {
-    if (showAgreePopup) {
-      const timer = setTimeout(() => setShowAgreePopup(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [showAgreePopup]);
 
   const validateForm = () => {
     let isValid = true;
@@ -67,7 +60,7 @@ export default function Login() {
     const { data, error } = await supabase
       .from("users")
       .upsert(
-        { auth_id: authId, email, nickname: email.split("@")[0] }, // 기본 닉네임 설정
+        { auth_id: authId, email, nickname: email.split("@")[0] },
         { onConflict: "auth_id" }
       )
       .select()
@@ -81,15 +74,23 @@ export default function Login() {
   };
 
   const handleLogin = async () => {
-    if (!validateForm()) return;
-    if (!agree) {
-      setShowAgreePopup(true);
+    // validateForm 실패 시 모달 띄우지 않음, 기존 에러 메시지만 표시
+    if (!validateForm()) {
       return;
     }
 
+    // 약관 미동의 시 모달 띄움
+    if (!agree) {
+      setModalMessage("약관에 동의해주세요.");
+      setIsModalOpen(true);
+      return;
+    }
+
+    // Supabase 인증 시도
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      alert("로그인 실패: " + error.message);
+      setModalMessage("이메일 또는 비밀번호가 잘못되었습니다.");
+      setIsModalOpen(true);
     } else {
       const authId = data.user?.id;
       if (authId) {
@@ -101,7 +102,8 @@ export default function Login() {
 
   const handleGoogleLogin = async () => {
     if (!agree) {
-      setShowAgreePopup(true);
+      setModalMessage("약관에 동의해주세요.");
+      setIsModalOpen(true);
       return;
     }
 
@@ -110,15 +112,17 @@ export default function Login() {
       options: { redirectTo: `${window.location.origin}/main` },
     });
     if (error) {
-      alert("구글 로그인 실패: " + error.message);
+      setModalMessage("구글 로그인 실패: " + error.message);
+      setIsModalOpen(true);
     } else if (data.url) {
-      window.location.href = data.url; // OAuth 리다이렉트
+      window.location.href = data.url;
     }
   };
 
   const handleAppleLogin = async () => {
     if (!agree) {
-      setShowAgreePopup(true);
+      setModalMessage("약관에 동의해주세요.");
+      setIsModalOpen(true);
       return;
     }
 
@@ -127,10 +131,16 @@ export default function Login() {
       options: { redirectTo: `${window.location.origin}/main` },
     });
     if (error) {
-      alert("애플 로그인 실패: " + error.message);
+      setModalMessage("애플 로그인 실패: " + error.message);
+      setIsModalOpen(true);
     } else if (data.url) {
-      window.location.href = data.url; // OAuth 리다이렉트
+      window.location.href = data.url;
     }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setModalMessage("");
   };
 
   return (
@@ -220,7 +230,7 @@ export default function Login() {
 
         <div className="pt-1 pr-4 pb-3 pl-4 flex flex-row gap-2 items-center justify-between w-full max-w-[480px]">
           <Link
-            href="/forgot-password"
+            href="#"
             className="text-[#a1824a] text-left font-['PlusJakartaSans-Regular'] text-sm leading-[21px] font-normal"
           >
             비밀번호를 잊으셨나요?
@@ -249,81 +259,88 @@ export default function Login() {
             >
               <Image
                 src="/google.png"
-                alt="Google 로고"
-                width={18}
-                height={18}
-                className="w-[18px] h-[18px]"
-              />
-              <span className="text-[#3c4043] font-['Roboto'] text-[14px] font-medium">
-                Google 계정으로 로그인
-              </span>
-            </button>
-          </div>
-        )}
-
-        {isIOS && (
-          <div className="pt-3 pr-4 pb-3 pl-4 flex flex-row gap-0 items-start md:items-center justify-start md:justify-center flex-wrap w-full max-w-[480px]">
-            <button
-              onClick={handleAppleLogin}
-              className="bg-black hover:bg-gray-900 rounded-lg px-5 flex flex-row gap-3 items-center justify-center w-full h-12 min-w-[160px] max-w-[480px] border border-transparent shadow-sm"
-            >
-              <svg
-                width="25"
-                height="25"
-                viewBox="0 0 24 24"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  d="M17.0001 10.1683C16.9683 8.62392 18.1575 7.56447 18.2165 7.52275C17.4484 6.40588 16.2409 6.23645 15.8042 6.21559C14.7445 6.10129 13.7266 6.84645 13.1882 6.84645C12.6397 6.84645 11.8191 6.23129 10.9243 6.25216C9.75809 6.27302 8.67778 6.91904 8.09677 7.93588C6.89445 9.99904 7.79445 13.0374 8.94938 14.6374C9.52006 15.4182 10.1933 16.2924 11.0933 16.2615C11.9724 16.2253 12.2917 15.7182 13.3514 15.7182C14.401 15.7182 14.6995 16.2615 15.6203 16.2407C16.5722 16.2253 17.1584 15.4494 17.7136 14.6582C18.3622 13.7582 18.6299 12.8788 18.6403 12.8374C18.6195 12.8269 17.0365 12.2061 17.0001 10.1683Z"
-                  fill="white"
-                />
-                <path
-                  d="M15.4091 5.21967C15.8821 4.63866 16.2048 3.82384 16.1115 3C15.4195 3.02604 14.5768 3.44217 14.083 4.00734C13.6413 4.50901 13.2563 5.34467 13.3703 6.14384C14.1488 6.21125 14.9153 5.79512 15.4091 5.21967Z"
-                  fill="white"
-                />
-              </svg>
-              <span className="text-white font-['SF Pro Display'] text-[14px] font-medium">
-                Apple 계정으로 로그인
-              </span>
-            </button>
-          </div>
-        )}
+            alt="Google 로고"
+            width={18}
+            height={18}
+            className="w-[18px] h-[18px]"
+          />
+          <span className="text-[#3c4043] font-['Roboto'] text-[14px] font-medium">
+            Google 계정으로 로그인
+          </span>
+        </button>
       </div>
+    )}
 
-      <div className="flex flex-col gap-0 items-start md:items-center justify-start self-stretch">
-        <div className="px-4">
-          <div className="pt-3 pb-3 flex flex-row gap-3 items-start md:items-center justify-start md:justify-center flex-wrap w-full max-w-[480px]">
-            <input
-              type="checkbox"
-              checked={agree}
-              onChange={(e) => setAgree(e.target.checked)}
-              className="rounded border-2 border-[#e8decf] w-5 h-5 accent-[#ebba61]"
+    {isIOS && (
+      <div className="pt-3 pr-4 pb-3 pl-4 flex flex-row gap-0 items-start md:items-center justify-start md:justify-center flex-wrap w-full max-w-[480px]">
+        <button
+          onClick={handleAppleLogin}
+          className="bg-black hover:bg-gray-900 rounded-lg px-5 flex flex-row gap-3 items-center justify-center w-full h-12 min-w-[160px] max-w-[480px] border border-transparent shadow-sm"
+        >
+          <svg
+            width="25"
+            height="25"
+            viewBox="0 0 24 24"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M17.0001 10.1683C16.9683 8.62392 18.1575 7.56447 18.2165 7.52275C17.4484 6.40588 16.2409 6.23645 15.8042 6.21559C14.7445 6.10129 13.7266 6.84645 13.1882 6.84645C12.6397 6.84645 11.8191 6.23129 10.9243 6.25216C9.75809 6.27302 8.67778 6.91904 8.09677 7.93588C6.89445 9.99904 7.79445 13.0374 8.94938 14.6374C9.52006 15.4182 10.1933 16.2924 11.0933 16.2615C11.9724 16.2253 12.2917 15.7182 13.3514 15.7182C14.401 15.7182 14.6995 16.2615 15.6203 16.2407C16.5722 16.2253 17.1584 15.4494 17.7136 14.6582C18.3622 13.7582 18.6299 12.8788 18.6403 12.8374C18.6195 12.8269 17.0365 12.2061 17.0001 10.1683Z"
+              fill="white"
             />
-            <div className="flex-1 min-w-[200px]">
-              <div className="text-[#1c170d] text-left md:text-center font-['PlusJakartaSans-Regular'] text-base leading-6 font-normal">
-                <Link href="/terms-of-service" className="underline">
-                  서비스이용약관
-                </Link>{" "}
-                및{" "}
-                <Link href="/privacy-policy" className="underline">
-                  개인정보처리방침
-                </Link>
-                에 동의합니다.
-              </div>
-            </div>
+            <path
+              d="M15.4091 5.21967C15.8821 4.63866 16.2048 3.82384 16.1115 3C15.4195 3.02604 14.5768 3.44217 14.083 4.00734C13.6413 4.50901 13.2563 5.34467 13.3703 6.14384C14.1488 6.21125 14.9153 5.79512 15.4091 5.21967Z"
+              fill="white"
+            />
+          </svg>
+          <span className="text-white font-['SF Pro Display'] text-[14px] font-medium">
+            Apple 계정으로 로그인
+          </span>
+        </button>
+      </div>
+    )}
+  </div>
+
+  <div className="flex flex-col gap-0 items-start md:items-center justify-start self-stretch">
+    <div className="px-4">
+      <div className="pt-3mu-3 flex flex-row gap-3 items-start md:items-center justify-start md:justify-center flex-wrap w-full max-w-[480px]">
+        <input
+          type="checkbox"
+          checked={agree}
+          onChange={(e) => setAgree(e.target.checked)}
+          className="rounded border-2 border-[#e8decf] w-5 h-5 accent-[#ebba61]"
+        />
+        <div className="flex-1 min-w-[200px]">
+          <div className="text-[#1c170d] text-left md:text-center font-['PlusJakartaSans-Regular'] text-base leading-6 font-normal">
+            <Link href="/terms-of-service" className="underline">
+              서비스이용약관
+            </Link>{" "}
+            및{" "}
+            <Link href="/privacy-policy" className="underline">
+              개인정보처리방침
+            </Link>
+            에 동의합니다.
           </div>
         </div>
-        <div className="bg-[#ffffff] h-5 self-stretch" />
       </div>
+    </div>
+    <div className="bg-[#ffffff] h-5 self-stretch" />
+  </div>
 
-      {showAgreePopup && (
-        <div className="fixed bottom-0 left-0 right-0 bg-red-500 text-white text-center py-3 z-50">
-          <p className="font-['PlusJakartaSans-Regular'] text-sm">
-            약관에 동의해주세요
-          </p>
-        </div>
-      )}
-    </main>
-  );
+  {isModalOpen && (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-[90%] max-w-[350px] flex flex-col gap-4">
+        <h3 className="text-[#1C2526] text-lg font-['Pretendard'] font-semibold">알림</h3>
+        <p className="text-[#1C2526] text-base font-['Pretendard'] font-normal">{modalMessage}</p>
+        <button
+          onClick={closeModal}
+          className="bg-[#EBBA61] text-white text-base font-['Pretendard'] font-medium px-4 py-2 rounded-lg hover:bg-[#e0a852] transition-colors"
+        >
+          확인
+        </button>
+      </div>
+    </div>
+  )}
+</main>
+);
 }
