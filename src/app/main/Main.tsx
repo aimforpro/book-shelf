@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/ts/useAuth";
 import { useRouter } from "next/navigation";
-import NavigationBar from "@/components/layout/NavigationBar";
-import { supabase } from "@/api/supabase";
+import NavigationBar from "@/tsx/NavigationBar";
+import { supabase } from "@/ts/supabase";
 
 const Main: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -19,11 +19,12 @@ const Main: React.FC = () => {
 
   const getWeekDates = () => {
     const today = new Date();
-    const dayOfWeek = today.getDay();
+    const dayOfWeek = today.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
+    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 월요일까지의 차이 계산
     const monday = new Date(today);
-    monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+    monday.setDate(today.getDate() - diffToMonday); // 이번 주 월요일로 설정
     const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6);
+    sunday.setDate(monday.getDate() + 6); // 이번 주 일요일 계산
 
     const formatDate = (date: Date) =>
       `${date.getMonth() + 1}.${date.getDate()}`;
@@ -147,22 +148,6 @@ const Main: React.FC = () => {
     <div className="bg-[#ffffff] flex flex-col gap-0 items-start justify-start min-h-screen">
       <div className="bg-[#ffffff] flex flex-col gap-0 items-start justify-start w-full max-w-[390px] min-h-screen mx-auto relative overflow-auto">
         <div className="bg-[#ffffff] pt-4 pr-4 pb-2 pl-4 flex flex-row items-center justify-between w-full h-[72px] relative">
-          {/* <div className="flex flex-row gap-0 items-start justify-start w-12 h-12">
-            <div className="w-6 h-6 relative overflow-hidden">
-              <Image
-                src="/assets/icons/back-arrow.svg"
-                alt="뒤로 가기"
-                width={24}
-                height={24}
-                className="absolute left-0 top-0"
-              />
-            </div>
-          </div> */}
-          {/* <div className="text-[#1c140d] font-['Pretendard'] text-sm">
-            {user?.email}님, 환영합니다!
-          </div> */}
-
-          {/* 환영 메시지 (계속 유지) */}
           <div className="absolute top-0 left-0 w-full bg-[#EBBA61] text-white text-center font-['Pretendard'] text-sm py-2">
             {welcomeMessage}
           </div>
@@ -178,14 +163,6 @@ const Main: React.FC = () => {
                 {getWeekDates()}
               </div>
             </div>
-            {/*
-            <button
-              onClick={handleBestsellersClick}
-              className="bg-[#EBBA61] text-white text-xs font-['Pretendard'] px-3 py-1 rounded hover:bg-[#e0a852] transition-colors"
-            >
-              지금 베스트셀러 보러 가기
-            </button>
-            */}
           </div>
         </div>
         <div className="flex flex-row gap-0 items-start justify-start w-full overflow-hidden">
@@ -303,8 +280,8 @@ const Main: React.FC = () => {
         className="fixed bottom-20 right-4 w-10 h-10 bg-[#EBBA61] rounded-full flex items-center justify-center shadow-lg z-50"
       >
         <Image
-          src="/assets/icons/search.svg"
-          alt="검색 아이콘"
+          src="/assets/icons/add-book.svg"
+          alt="추가 아이콘"
           width={24}
           height={24}
           className="invert"

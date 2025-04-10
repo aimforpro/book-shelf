@@ -3,10 +3,10 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
-import NavigationBar from "@/components/layout/NavigationBar";
-import { useAuth } from "@/hooks/useAuth"; // useAuth 훅 임포트
-import { supabase } from "@/api/supabase"; // Supabase 클라이언트 임포트
-import { useModal } from "@/context/ModalContext"; // useModal 훅 임포트
+import NavigationBar from "@/tsx/NavigationBar";
+import { useAuth } from "@/ts/useAuth";
+import { supabase } from "@/ts/supabase";
+import { useModal } from "@/tsx/ModalContext";
 
 interface BookInfo {
   title: string;

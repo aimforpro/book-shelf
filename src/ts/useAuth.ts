@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/api/supabase";
+import { supabase } from "@/ts/supabase";
 
 export const useAuth = () => {
   const [user, setUser] = useState<any>(null);

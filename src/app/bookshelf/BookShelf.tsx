@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import NavigationBar from "@/components/layout/NavigationBar";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/api/supabase";
-import { useModal } from "@/context/ModalContext";
+import NavigationBar from "@/tsx/NavigationBar";
+import { useAuth } from "@/ts/useAuth";
+import { supabase } from "@/ts/supabase";
+import { useModal } from "@/tsx/ModalContext";
 import { useRouter, useSearchParams } from "next/navigation";
 
 interface Book {
@@ -315,7 +315,12 @@ const BookShelf: React.FC = () => {
           {filteredBooks.length === 0 ? (
             <div className="flex flex-col items-center justify-center w-full h-[400px] gap-4">
               <p className="text-[#4A4A4A] font-['Pretendard'] text-base leading-6 text-center">
-                {searchQuery ? `'${searchQuery}'에 대한 검색 결과가 없습니다.` : "책이 없습니다."}
+              {searchQuery ? `'${searchQuery}'에 대한 검색 결과가 없습니다.` : (
+                <>
+                  책장이 비어 있어요.<br/>
+                  '책 추가' 버튼으로 책을 등록해보세요!
+                </>
+              )}
               </p>
             </div>
           ) : (
@@ -383,8 +388,8 @@ const BookShelf: React.FC = () => {
           className="fixed bottom-20 right-4 w-10 h-10 bg-[#EBBA61] rounded-full flex items-center justify-center shadow-lg z-50"
         >
           <Image
-            src="/assets/icons/search.svg"
-            alt="Search Icon"
+            src="/assets/icons/add-book.svg"
+            alt="추가 아이콘"
             width={24}
             height={24}
             className="invert"

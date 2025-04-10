@@ -1,4 +1,4 @@
-import { supabase } from "@/api/supabase";
+import { supabase } from "@/ts/supabase";
 
 // Supabase 클라이언트 초기화 및 책 데이터 조회
 async function getBookData() {

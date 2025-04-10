@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { Builder, By, until } from "selenium-webdriver";
 import { ServiceBuilder } from "selenium-webdriver/chrome";
-import { supabase } from "@/api/supabase";
+import { supabase } from "@/ts/supabase";
 
 export async function GET() {
   let driver;

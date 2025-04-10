@@ -3,10 +3,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import NavigationBar from "@/components/layout/NavigationBar";
-import { searchNaverBooks } from "@/api/naver";
-import { useAuth } from "@/hooks/useAuth";
-import { useModal } from "@/context/ModalContext";
+import NavigationBar from "@/tsx/NavigationBar";
+import { searchNaverBooks } from "@/ts/naver";
+import { useAuth } from "@/ts/useAuth";
+import { useModal } from "@/tsx/ModalContext";
 interface Book {
   title: string;
   author: string;

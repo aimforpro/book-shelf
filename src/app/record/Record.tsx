@@ -2,13 +2,13 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import Image from "next/image";
-import NavigationBar from "@/components/layout/NavigationBar";
+import NavigationBar from "@/tsx/NavigationBar";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { ko } from "date-fns/locale";
-import { useAuth } from "@/hooks/useAuth";
-import { useModal } from "@/context/ModalContext";
-import { supabase } from "@/api/supabase";
+import { useAuth } from "@/ts/useAuth";
+import { useModal } from "@/tsx/ModalContext";
+import { supabase } from "@/ts/supabase";
 import { useRouter } from "next/navigation";
 
 interface BookProgress {
@@ -493,7 +493,7 @@ const Record: React.FC = () => {
           <p className="text-text-primary text-left text-sm leading-21 font-normal w-[70%]">
             당신의 독서 이야기가 누군가에게 새로운 책의 문을 열어줄지 몰라요.
             <br />
-            “책꽃이 유저들과 함께 감동을 나눠요”
+            "책꽃이 유저들과 함께 감동을 나눠요"
           </p>
           <label className="relative inline-flex items-center cursor-pointer">
             <input

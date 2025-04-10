@@ -2,10 +2,10 @@
 
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import NavigationBar from "@/components/layout/NavigationBar";
-import { useAuth } from "@/hooks/useAuth";
+import NavigationBar from "@/tsx/NavigationBar";
+import { useAuth } from "@/ts/useAuth";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/api/supabase";
+import { supabase } from "@/ts/supabase";
 import PrivacyPolicyModal from "./PrivacyPolicyModal";
 import TermsOfServiceModal from "./TermsOfServiceModal";
 
