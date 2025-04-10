@@ -1,16 +1,20 @@
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
-
+import { usePathname } from "next/navigation";
 interface NavigationBarProps {
   currentPath?: string; // 선택적 prop으로 현재 경로를 받아 활성 상태 표시
 }
 
 const NavigationBar: React.FC<NavigationBarProps> = ({ currentPath = "" }) => {
+  const pathname = usePathname();
+  const activePath = currentPath || pathname || "";
+  console.log("Active Path:", activePath);
+
   const navItems = [
-    { path: "/", icon: "/assets/icons/home.svg", label: "홈" },
-    { path: "/records", icon: "/assets/icons/book.svg", label: "책꽃이" },
-    { path: "/profile", icon: "/assets/icons/profile.svg", label: "프로필" },
+    { path: "/main", iconOff: "/assets/icons/home-off.svg", iconOn: "/assets/icons/home-on.svg", label: "홈" },
+    { path: "/bookshelf", iconOff: "/assets/icons/book-off.svg", iconOn: "/assets/icons/book-on.svg", label: "책꽃이" },
+    { path: "/mypage", iconOff: "/assets/icons/profile-off.svg", iconOn: "/assets/icons/profile-on.svg", label: "프로필" },
   ];
 
   return (
@@ -19,15 +23,15 @@ const NavigationBar: React.FC<NavigationBarProps> = ({ currentPath = "" }) => {
         <Link href={item.path} key={item.path}>
           <div className="flex flex-col items-center justify-center gap-1">
             <Image
-              src={item.icon}
+              src={activePath === item.path ? item.iconOn : item.iconOff}
               alt={`${item.label} Icon`}
               width={24}
               height={24}
-              className={currentPath === item.path ? "opacity-100" : "opacity-50"}
+              className="object-contain max-w-[24px] max-h-[24px]"
             />
             <span
               className={`text-[#4A4A4A] font-['Pretendard'] text-xs leading-[18px] ${
-                currentPath === item.path ? "font-bold" : "font-normal"
+                activePath === item.path ? "font-bold" : "font-normal"
               }`}
             >
               {item.label}

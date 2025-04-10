@@ -4,19 +4,24 @@ import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { useSearchParams, useRouter } from "next/navigation";
 import NavigationBar from "@/components/layout/NavigationBar";
+import { useAuth } from "@/hooks/useAuth"; // useAuth 훅 임포트
+import { supabase } from "@/api/supabase"; // Supabase 클라이언트 임포트
+import { useModal } from "@/context/ModalContext"; // useModal 훅 임포트
 
 interface BookInfo {
   title: string;
   authors: string;
   description: string;
   publisher: string;
-  isbn: string; // ISBN으로 변경
+  isbn: string;
   publicationDate: string;
   price: number;
   image: string;
 }
 
 const Register: React.FC = () => {
+  const { user, loading: authLoading } = useAuth(); // 유저 세션 정보 가져오기
+  const { showModal } = useModal(); // 모달 호출 훅
   const searchParams = useSearchParams();
   const router = useRouter();
   const [bookInfo, setBookInfo] = useState<BookInfo | null>(null);
@@ -41,7 +46,7 @@ const Register: React.FC = () => {
       authors,
       description,
       publisher,
-      isbn, // ISBN으로 변경
+      isbn,
       publicationDate: formattedPubdate,
       price: parseInt(discount) || 0,
       image,
@@ -50,9 +55,40 @@ const Register: React.FC = () => {
     setBookInfo(bookData);
   }, [searchParams]);
 
-  const handleRegister = () => {
-    if (bookInfo) {
-      console.log("등록 버튼 클릭됨:", bookInfo);
+  const handleRegister = async () => {
+    if (!bookInfo || !user) return;
+  
+    try {
+      // users 테이블에서 auth_id로 user_id(BIGINT) 조회
+      const { data: userData, error: userError } = await supabase
+        .from("users")
+        .select("id")
+        .eq("auth_id", user.id) // user.id는 UUID
+        .single();
+  
+      if (userError || !userData) throw new Error("사용자 정보를 찾을 수 없습니다.");
+  
+      const bookData = {
+        user_id: userData.id, // BIGINT 값 사용
+        title: bookInfo.title,
+        author: bookInfo.authors,
+        description: bookInfo.description,
+        publisher: bookInfo.publisher,
+        isbn: bookInfo.isbn,
+        pubdate: bookInfo.publicationDate,
+        discount: bookInfo.price.toString(),
+        cover_url: bookInfo.image,
+        created_at: new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" }),
+      };
+  
+      const { error } = await supabase.from("books").insert(bookData);
+      if (error) throw error;
+  
+      showModal("책이 성공적으로 등록되었습니다!", "success");
+      setTimeout(() => router.push("/bookshelf"), 1500);
+    } catch (err) {
+      console.error("책 등록 오류:", err);
+      showModal("책 등록에 실패했습니다. 다시 시도해주세요.", "error"); // 실패 모달
     }
   };
 
@@ -60,8 +96,15 @@ const Register: React.FC = () => {
     router.back();
   };
 
+  if (authLoading) return <div className="text-center mt-10">로딩 중...</div>;
+
+  if (!user) {
+    router.push("/unauthenticated");
+    return null; 
+  }
+
   if (!bookInfo) {
-    return <div>로딩 중...</div>;
+    return <div>책 정보가 없습니다.</div>;
   }
 
   return (
@@ -77,10 +120,12 @@ const Register: React.FC = () => {
               height={24}
             />
           </button>
-          <h1 className="text-[#4A4A4A] text-left font-['Pretendard'] text-lg font-bold">
+          {/* <h1 className="text-[#4A4A4A] text-left font-['Pretendard'] text-lg font-bold">
             등록
           </h1>
-          <div className="w-6" />
+          <div className="text-[#1C140D] font-['Pretendard'] text-sm">
+            {user.email}님
+          </div> */}
         </div>
 
         {/* 책 정보 섹션 */}
@@ -120,7 +165,6 @@ const Register: React.FC = () => {
               정보
             </h3>
             <div className="flex flex-col gap-3 items-start justify-start w-full">
-              {/* 도서명 */}
               <div className="flex flex-row items-center justify-start w-full bg-[#F9F9F9] rounded-lg p-3 shadow-sm">
                 <span className="text-[#4A4A4A] font-['Pretendard'] text-sm leading-[24px] font-medium w-20">
                   도서명
@@ -129,7 +173,6 @@ const Register: React.FC = () => {
                   {bookInfo.title}
                 </span>
               </div>
-              {/* 저자 */}
               <div className="flex flex-row items-center justify-start w-full bg-[#F9F9F9] rounded-lg p-3 shadow-sm">
                 <span className="text-[#4A4A4A] font-['Pretendard'] text-sm leading-[24px] font-medium w-20">
                   저자
@@ -138,7 +181,6 @@ const Register: React.FC = () => {
                   {bookInfo.authors.split(", ")[0]}
                 </span>
               </div>
-              {/* 출판사 */}
               <div className="flex flex-row items-center justify-start w-full bg-[#F9F9F9] rounded-lg p-3 shadow-sm">
                 <span className="text-[#4A4A4A] font-['Pretendard'] text-sm leading-[24px] font-medium w-20">
                   출판사
@@ -147,7 +189,6 @@ const Register: React.FC = () => {
                   {bookInfo.publisher}
                 </span>
               </div>
-              {/* ISBN */}
               <div className="flex flex-row items-center justify-start w-full bg-[#F9F9F9] rounded-lg p-3 shadow-sm">
                 <span className="text-[#4A4A4A] font-['Pretendard'] text-sm leading-[24px] font-medium w-20">
                   ISBN
@@ -156,7 +197,6 @@ const Register: React.FC = () => {
                   {bookInfo.isbn}
                 </span>
               </div>
-              {/* 발행일 */}
               <div className="flex flex-row items-center justify-start w-full bg-[#F9F9F9] rounded-lg p-3 shadow-sm">
                 <span className="text-[#4A4A4A] font-['Pretendard'] text-sm leading-[24px] font-medium w-20">
                   발행일
@@ -165,7 +205,6 @@ const Register: React.FC = () => {
                   {bookInfo.publicationDate}
                 </span>
               </div>
-              {/* 가격 */}
               <div className="flex flex-row items-center justify-start w-full bg-[#F9F9F9] rounded-lg p-3 shadow-sm">
                 <span className="text-[#4A4A4A] font-['Pretendard'] text-sm leading-[24px] font-medium w-20">
                   가격

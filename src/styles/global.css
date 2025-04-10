@@ -2,10 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700&display=swap');
-
 @layer base {
   body {
     font-family: "Pretendard", sans-serif;
   }
+}
+
+@keyframes shake {
+  0% { transform: translate(0, 0) rotate(0deg); }
+  25% { transform: translate(2px, 1px) rotate(1deg); }
+  50% { transform: translate(-2px, -1px) rotate(-1deg); }
+  75% { transform: translate(2px, -1px) rotate(1deg); }
+  100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+@layer components {
+  .custom-calendar {
+    @apply border-none bg-white-bg font-pretendard text-text-primary w-full max-w-[300px] mx-auto;
+  }
+
+  .custom-calendar .react-datepicker__header {
+    @apply bg-white-bg border-b border-border-color text-text-primary font-medium text-base py-3;
+  }
+
+  .custom-calendar .react-datepicker__day-names {
+    @apply flex flex-row justify-between w-full;
+  }
+
+  .custom-calendar .react-datepicker__day-name {
+    @apply w-8 h-8 flex items-center justify-center text-xs text-text-secondary font-normal;
+  }
+
+  .custom-calendar .react-datepicker__week {
+    @apply flex flex-row justify-between;
+  }
+
+  .custom-calendar .react-datepicker__day {
+    @apply w-8 h-8 flex items-center justify-center text-xs text-text-primary hover:bg-progress-bg hover:text-progress-fill rounded-full transition-colors cursor-pointer;
+  }
+
+  /* 선택 불가 날짜 스타일 */
+  .custom-calendar .react-datepicker__day--disabled {
+    @apply text-gray-500 cursor-not-allowed;
+  }
+
+  /* 선택 불가 날짜는 호버 효과 제거 */
+  .custom-calendar .react-datepicker__day--disabled:hover {
+    @apply bg-transparent text-gray-500;
+  }
+
+  .custom-calendar .react-datepicker__day--selected,
+  .custom-calendar .react-datepicker__day--keyboard-selected {
+    @apply bg-progress-fill text-white-bg rounded-full;
+  }
+
+  .custom-calendar .react-datepicker__day--outside-month {
+    @apply text-gray-400;
+  }
+
+  .custom-calendar .react-datepicker__navigation {
+    @apply top-4 w-6 h-6 outline-none;
+  }
+
+  .custom-calendar .react-datepicker__navigation-icon::before {
+    @apply border-text-secondary;
+    border-width: 2px;
+    border-style: solid;
+  }
+
+  .custom-calendar .react-datepicker__month {
+    @apply mt-2 mb-4;
+  }
+}
+
+.react-datepicker {
+  @apply border-none !important;
+}
+
+.react-datepicker__triangle {
+  display: none !important;
 }

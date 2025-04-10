@@ -5,7 +5,8 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import NavigationBar from "@/components/layout/NavigationBar";
 import { searchNaverBooks } from "@/api/naver";
-
+import { useAuth } from "@/hooks/useAuth";
+import { useModal } from "@/context/ModalContext";
 interface Book {
   title: string;
   author: string;
@@ -15,10 +16,11 @@ interface Book {
   description: string;
   pubdate: string;
   discount: string;
-  isbn: string; 
+  isbn: string;
 }
 
 const Search: React.FC = () => {
+  const { user, loading: authLoading } = useAuth();
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -28,19 +30,17 @@ const Search: React.FC = () => {
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
-  // 검색 내역 복원
   useEffect(() => {
-    const savedQuery = sessionStorage.getItem("searchQuery");
+    setSearchQuery("");
+
     const savedBooks = sessionStorage.getItem("searchBooks");
     const savedPage = sessionStorage.getItem("searchPage");
     const savedScroll = sessionStorage.getItem("scrollPosition");
 
-    if (savedQuery) setSearchQuery(savedQuery);
     if (savedBooks) setBooks(JSON.parse(savedBooks));
     if (savedPage) setPage(parseInt(savedPage));
     if (savedBooks && savedBooks.length > 0) setHasMore(true);
 
-    // 스크롤 위치 복원
     if (savedScroll) {
       setTimeout(() => {
         window.scrollTo(0, parseInt(savedScroll));
@@ -48,7 +48,6 @@ const Search: React.FC = () => {
     }
   }, []);
 
-  // 검색 내역 저장
   const saveSearchState = () => {
     sessionStorage.setItem("searchQuery", searchQuery);
     sessionStorage.setItem("searchBooks", JSON.stringify(books));
@@ -80,7 +79,6 @@ const Search: React.FC = () => {
       setHasMore(result.length === 10);
       setPage(currentPage + 1);
 
-      // 검색 상태 저장
       sessionStorage.setItem("searchQuery", searchQuery);
       sessionStorage.setItem("searchBooks", JSON.stringify(newBooks));
       sessionStorage.setItem("searchPage", (currentPage + 1).toString());
@@ -104,7 +102,7 @@ const Search: React.FC = () => {
   };
 
   const handleBookClick = (book: Book) => {
-    saveSearchState(); // 검색 상태 저장
+    saveSearchState();
     const query = new URLSearchParams({
       title: book.title.replace(/<b>/g, "").replace(/<\/b>/g, ""),
       author: book.author,
@@ -113,7 +111,7 @@ const Search: React.FC = () => {
       description: book.description || "책 소개가 없습니다.",
       pubdate: book.pubdate || "발행일 정보 없음",
       discount: book.discount || "0",
-      isbn: book.isbn || "ISBN 정보 없음", 
+      isbn: book.isbn || "ISBN 정보 없음",
     }).toString();
 
     router.push(`/register?${query}`);
@@ -140,35 +138,44 @@ const Search: React.FC = () => {
     };
   }, [hasMore, loading, page]);
 
+  if (authLoading) return <div className="text-center mt-10">로딩 중...</div>;
+
+  if (!user) {
+    router.push("/unauthenticated");
+    return null; 
+  }
+
   return (
     <div className="bg-[#FFFFFF] flex flex-col items-start justify-start min-h-screen">
       <div className="flex flex-col gap-0 items-start justify-start w-full min-h-screen relative overflow-hidden">
         {/* 헤더 */}
-        <div className="bg-[#FFFFFF] pt-4 px-4 pb-2 flex flex-row items-center justify-between w-full h-[72px]">
-          <h1 className="text-[#4A4A4A] text-left font-['Pretendard'] text-lg font-bold">
+        <div className="bg-[#FFFFFF] pt-4 px-4 pb-2 flex flex-row items-center justify-between w-full h-[30px]">
+          {/* <h1 className="text-[#4A4A4A] text-left font-['Pretendard'] text-lg font-bold">
             책 검색
           </h1>
+          <div className="text-[#1C140D] font-['Pretendard'] text-sm">
+            {user.email}님
+          </div> */}
         </div>
 
         {/* 검색 입력 */}
         <div className="bg-[#FFFFFF] pt-4 px-4 pb-2 flex flex-row items-center justify-between w-full">
           <div className="bg-[#FFFFFF] rounded-xl border border-[#E8DECF] p-[15px] flex flex-row gap-2 items-center w-full max-w-[358px] h-14">
+            <Image
+              src="/assets/icons/search.svg"
+              alt="Search Icon"
+              width={24}
+              height={24}
+            />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
+              onBlur={handleSearchClick} // 포커스 잃을 때 검색 실행
               placeholder="책 제목 검색"
               className="text-[#A1824A] font-['Pretendard'] text-base leading-6 w-full outline-none"
             />
-            <button onClick={handleSearchClick}>
-              <Image
-                src="/assets/icons/search.svg"
-                alt="Search Icon"
-                width={24}
-                height={24}
-              />
-            </button>
           </div>
         </div>
 
@@ -200,12 +207,12 @@ const Search: React.FC = () => {
           </div>
         ) : books.length === 0 ? (
           <div className="flex flex-col items-center justify-center w-full h-[400px] gap-4">
-            <Image
+            {/* <Image
               src="/assets/icons/no-results.svg"
               alt="No Results"
               width={100}
               height={100}
-            />
+            /> */}
             <p className="text-[#4A4A4A] font-['Pretendard'] text-base leading-6 text-center">
               검색을 시작해보세요!
             </p>
@@ -244,7 +251,7 @@ const Search: React.FC = () => {
             ))}
             <div ref={loaderRef} className="w-full h-10 flex justify-center items-center">
               {loading && <p className="text-[#4A4A4A] font-['Pretendard'] text-base">로딩 중...</p>}
-              {!hasMore && books.length > 0 && (
+              {!hasMore && books.length === 0 && (
                 <p className="text-[#4A4A4A] font-['Pretendard'] text-base">더 이상 결과가 없습니다.</p>
               )}
             </div>

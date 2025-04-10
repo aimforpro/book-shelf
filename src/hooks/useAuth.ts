@@ -1,26 +1,61 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/api/supabase';
-import { User } from '@supabase/supabase-js';
+"use client";
 
-export function useAuth() {
-  const [user, setUser] = useState<User | null>(null);
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/api/supabase";
+
+export const useAuth = () => {
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    // 현재 세션 확인
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
+    const handleAuth = async () => {
+      if (typeof window === "undefined") return;
+
+      try {
+        const hash = window.location.hash;
+        const params = new URLSearchParams(hash.replace("#", ""));
+        const accessToken = params.get("access_token");
+        const refreshToken = params.get("refresh_token");
+
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (error) throw error;
+
+          const { data: userData, error: userError } = await supabase.auth.getUser();
+          if (userError) throw userError;
+          setUser(userData.user);
+
+          router.replace(window.location.pathname, undefined, { shallow: true });
+        } else {
+          const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+          if (sessionError) throw sessionError;
+          if (sessionData.session) setUser(sessionData.session.user);
+        }
+      } catch (err) {
+        console.error("handleAuth 예외:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    handleAuth();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN") {
+        setUser(session?.user || null);
+      } else if (event === "SIGNED_OUT") {
+        setUser(null);
+        router.push("/login");
+      }
     });
 
-    // 인증 상태 변경 구독
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => authListener.subscription.unsubscribe();
+  }, [router]);
 
   return { user, loading };
-} 
+};

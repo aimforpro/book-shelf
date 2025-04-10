@@ -19,6 +19,8 @@ console.log("Supabase 연결 설정:", {
 // Supabase 클라이언트 초기화
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: false, // 세션 유지 비활성화 (필요에 따라 조정)
+    persistSession: true, // 세션 유지 활성화 (기본값)
+    autoRefreshToken: true, // 토큰 자동 갱신
+    detectSessionInUrl: true, // URL에서 세션 감지
   },
 });

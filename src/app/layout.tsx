@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "../styles/global.css";
+import ClientLayout from "./ClientLayout"; // 클라이언트 레이아웃 임포트
 
 export const metadata: Metadata = {
   title: "책꽂이",
@@ -14,13 +15,14 @@ export default function RootLayout({
   return (
     <html lang="ko">
       <head>
-        {/* Pretendard 폰트 CDN 추가 */}
         <link
           href="https://cdn.jsdelivr.net/npm/pretendard@latest/dist/web/static/pretendard.css"
           rel="stylesheet"
         />
       </head>
-      <body className="font-pretendard">{children}</body>
+      <body className="font-pretendard">
+        <ClientLayout>{children}</ClientLayout>
+      </body>
     </html>
   );
 }
