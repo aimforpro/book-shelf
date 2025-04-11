@@ -1,6 +1,6 @@
 // src/app/login/page.tsx
 import { Suspense } from "react";
-import Login from "./Login";
+import Login from "@/app/login/Login";
 import NavigationBar from "@/tsx/NavigationBar";
 
 export default function LoginPage() {

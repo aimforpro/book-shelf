@@ -1,7 +1,10 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+
 interface NavigationBarProps {
   currentPath?: string; // 선택적 prop으로 현재 경로를 받아 활성 상태 표시
 }
