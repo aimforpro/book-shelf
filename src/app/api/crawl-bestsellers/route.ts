@@ -9,22 +9,30 @@ export async function GET() {
   try {
     // Chromium 설정
     const chromeOptions = new chrome.Options()
-      .addArguments("--headless") // 헤드리스 모드
-      .addArguments("--no-sandbox") // 서버리스 환경 필수
+      .addArguments("--headless")
+      .addArguments("--no-sandbox")
       .addArguments("--disable-dev-shm-usage")
       .addArguments("--disable-gpu")
       .addArguments(
         "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-      ); // 네이버 정책 우회
+      );
 
     // 디버깅용 로그 추가
-    console.log("Chromium 경로:", chromium.path);
+    console.log("Chromium 설정 초기화 중...");
 
-    // Selenium WebDriver 빌드 (ServiceBuilder 제거)
+    // 타입 단언으로 chromium.path 사용
+    const chromiumPath = (chromium as any).path || process.env.CHROME_BINARY_PATH;
+
+    if (!chromiumPath) {
+      throw new Error("Chromium 바이너리 경로를 찾을 수 없습니다.");
+    }
+
+    console.log("Chromium 경로:", chromiumPath);
+    // Selenium WebDriver 빌드
     driver = await new Builder()
       .forBrowser("chrome")
-      .setChromeOptions(chromeOptions)
-      .setChromeBinaryPath(chromium.path) // @sparticuz/chromium의 바이너리 경로
+      .setChromeOptions(chromeOptions as chrome.Options)
+      .setChromeService(new chrome.ServiceBuilder(chromiumPath))
       .build();
 
     const url =
