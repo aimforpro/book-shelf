@@ -86,9 +86,13 @@ const Register: React.FC = () => {
   
       showModal("책이 성공적으로 등록되었습니다!", "success");
       setTimeout(() => router.push("/bookshelf"), 1500);
-    } catch (err) {
+    } catch (err: any) {
       console.error("책 등록 오류:", err);
-      showModal("책 등록에 실패했습니다. 다시 시도해주세요.", "error"); // 실패 모달
+      if (err.code === "23505") {
+        showModal("이미 등록된 책입니다.", "error");
+      } else {
+        showModal("책 등록에 실패했습니다. 다시 시도해주세요.", "error");
+      }
     }
   };
 

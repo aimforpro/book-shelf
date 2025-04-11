@@ -80,9 +80,9 @@
 }
 
 .react-datepicker {
-  @apply border-none !important;
+  @apply border-none !border-none;
 }
 
 .react-datepicker__triangle {
-  display: none !important;
+  @apply !hidden;
 }

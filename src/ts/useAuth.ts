@@ -30,7 +30,7 @@ export const useAuth = () => {
           if (userError) throw userError;
           setUser(userData.user);
 
-          router.replace(window.location.pathname, undefined, { shallow: true });
+          router.replace(window.location.pathname);
         } else {
           const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
           if (sessionError) throw sessionError;

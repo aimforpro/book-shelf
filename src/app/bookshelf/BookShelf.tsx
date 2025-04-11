@@ -217,19 +217,25 @@ const BookShelf: React.FC = () => {
     if (!user) return;
 
     try {
-      const { data: userData } = await supabase
+      const { data: userData, error: userError } = await supabase
         .from("users")
         .select("id")
         .eq("auth_id", user.id)
         .single();
 
-      const { error } = await supabase
+      if (userError || !userData) {
+        throw new Error("사용자 정보를 찾을 수 없습니다.");
+      }
+
+      const { error: deleteError } = await supabase
         .from("books")
         .delete()
         .eq("id", bookId)
         .eq("user_id", userData.id);
 
-      if (error) throw error;
+      if (deleteError) {
+        throw deleteError;
+      }
 
       setBooks((prevBooks) => prevBooks.filter((book) => book.id !== bookId));
       showModal("책이 삭제되었습니다!", "success");

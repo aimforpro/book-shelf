@@ -15,16 +15,15 @@ const Main: React.FC = () => {
   const [fetchLoading, setFetchLoading] = useState<boolean>(true);
   const [animate, setAnimate] = useState(false);
 
-  const welcomeMessage = "책과 함께하는 멋진 여정을 시작해보세요!"; // 나중에 변경 가능
+  const welcomeMessage = "책과 함께하는 멋진 여정을 시작해보세요!";
 
   const getWeekDates = () => {
     const today = new Date();
-    const dayOfWeek = today.getDay(); // 0: 일요일, 1: 월요일, ..., 6: 토요일
-    const diffToMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // 월요일까지의 차이 계산
+    const dayOfWeek = today.getDay();
     const monday = new Date(today);
-    monday.setDate(today.getDate() - diffToMonday); // 이번 주 월요일로 설정
+    monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
     const sunday = new Date(monday);
-    sunday.setDate(monday.getDate() + 6); // 이번 주 일요일 계산
+    sunday.setDate(monday.getDate() + 6);
 
     const formatDate = (date: Date) =>
       `${date.getMonth() + 1}.${date.getDate()}`;
@@ -137,11 +136,17 @@ const Main: React.FC = () => {
   const onStop = () => setAnimate(false);
   const onRun = () => setAnimate(true);
 
-  if (authLoading) return <div className="text-center mt-10">로딩 중...</div>;
+  if (authLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-[#ffffff]">
+        <div className="w-12 h-12 border-4 border-t-[#EBBA61] border-gray-200 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   if (!user) {
     router.push("/unauthenticated");
-    return null; // 리다이렉션 후 렌더링 중단
+    return null;
   }
 
   return (
@@ -167,9 +172,13 @@ const Main: React.FC = () => {
         </div>
         <div className="flex flex-row gap-0 items-start justify-start w-full overflow-hidden">
           {fetchLoading ? (
-            <div className="text-center w-full py-4">로딩 중...</div>
+            <div className="flex justify-center items-center w-full py-4">
+              <div className="w-8 h-8 border-4 border-t-[#EBBA61] border-gray-200 rounded-full animate-spin"></div>
+            </div>
           ) : bestsellers.length === 0 ? (
-            <div className="text-center w-full py-4">베스트셀러 데이터가 없습니다.</div>
+            <div className="text-center w-full py-4 text-[#666666] font-['Pretendard'] text-sm">
+              베스트셀러 데이터가 없습니다.
+            </div>
           ) : (
             <div
               className="slide-wrapper"
@@ -234,9 +243,13 @@ const Main: React.FC = () => {
           </div>
         </div>
         {fetchLoading ? (
-          <div className="text-center w-full py-4">로딩 중...</div>
+          <div className="flex justify-center items-center w-full py-4">
+            <div className="w-8 h-8 border-4 border-t-[#EBBA61] border-gray-200 rounded-full animate-spin"></div>
+          </div>
         ) : sharedNotes.length === 0 ? (
-          <div className="text-center w-full py-4">공유된 노트가 없습니다.</div>
+          <div className="text-center w-full py-4 text-[#666666] font-['Pretendard'] text-sm">
+            공유된 노트가 없습니다.
+          </div>
         ) : (
           sharedNotes.map((note, index) => (
             <div
@@ -281,7 +294,7 @@ const Main: React.FC = () => {
       >
         <Image
           src="/assets/icons/add-book.svg"
-          alt="추가 아이콘"
+          alt="책 추가 아이콘"
           width={24}
           height={24}
           className="invert"

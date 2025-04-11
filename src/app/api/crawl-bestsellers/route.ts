@@ -16,7 +16,7 @@ export async function GET() {
       .build();
 
     const url =
-      "https://search.shopping.naver.com/book/search?bookTabType=BEST_SELLER&catId=50005542&pageIndex=1&pageSize=40&query=%EB%B2%A0%EC%8A%A5%ED%8A%B8%EC%85%80%EB%9F%AC&sort=REL";
+      "https://search.shopping.naver.com/book/search?bookTabType=BEST_SELLER&catId=50005542&pageIndex=1&pageSize=40&query=%EB%B2%A0%EC%8A%A4%ED%8A%B8%EC%85%80%EB%9F%AC&sort=REL";
     console.log("페이지로 이동 중:", url);
     await driver.get(url);
 
@@ -45,8 +45,6 @@ export async function GET() {
       });
     }
 
-    console.log("크롤링된 책 데이터:", books);
-
     // 한국 시간(KST)으로 created_at 추가
     const nowKST = new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
     const booksWithKST = books.map(book => ({
@@ -55,17 +53,25 @@ export async function GET() {
     }));
 
     if (booksWithKST.length > 0) {
-      const { error } = await supabase.from("bestseller").insert(booksWithKST);
-      if (error) throw new Error(`Supabase 삽입 오류: ${error.message}`);
+      // 기존 bestseller 테이블 데이터 모두 삭제
+      const { error: deleteError } = await supabase.from("bestseller").delete().neq('id', 0); // id는 절대 같을 수 없으므로 모든 행 삭제
+      if (deleteError) throw new Error(`Supabase 삭제 오류: ${deleteError.message}`);
+
+      // 새로운 데이터 삽입
+      const { error: insertError } = await supabase.from("bestseller").insert(booksWithKST);
+      if (insertError) throw new Error(`Supabase 삽입 오류: ${insertError.message}`);
     }
 
     await driver.quit();
     return NextResponse.json({ message: "베스트셀러 크롤링 및 저장 성공", books: booksWithKST });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("크롤링 오류:", error);
     if (driver) await driver.quit();
     return NextResponse.json(
-      { message: "크롤링 중 오류 발생", error: error.message },
+      { 
+        message: "크롤링 중 오류 발생", 
+        error: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다"
+      },
       { status: 500 }
     );
   }

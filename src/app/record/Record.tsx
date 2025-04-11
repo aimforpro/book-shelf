@@ -24,6 +24,16 @@ interface BookProgress {
   isShared: boolean;
 }
 
+interface ReadingRecord {
+  id?: number;
+  start_date?: string | null;
+  end_date?: string | null;
+  progress?: number;
+  rating?: number;
+  memo?: string;
+  shared_memos?: { id?: number; is_visible?: string }[] | { id?: number; is_visible?: string };
+}
+
 const Record: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
   const { showModal } = useModal();
@@ -106,8 +116,7 @@ const Record: React.FC = () => {
 
       if (bookError) throw bookError;
 
-      const readingRecord = bookData.reading_records?.length > 0 ? bookData.reading_records[0] : {};
-      // shared_memos는 1:1 관계이므로 단일 객체로 처리
+      const readingRecord: ReadingRecord = bookData.reading_records?.length > 0 ? bookData.reading_records[0] : {};
       const sharedMemo = Array.isArray(readingRecord.shared_memos)
         ? readingRecord.shared_memos[0] || {}
         : readingRecord.shared_memos || {};
@@ -157,6 +166,9 @@ const Record: React.FC = () => {
         .select("id")
         .eq("auth_id", user.id)
         .single();
+      if (!userData) {
+        throw new Error("사용자 정보를 찾을 수 없습니다.");
+      }
 
       const { data: record, error: fetchError } = await supabase
         .from("reading_records")
@@ -618,7 +630,11 @@ const Record: React.FC = () => {
                 selected={
                   bookProgress.startDate ? new Date(bookProgress.startDate) : null
                 }
-                onChange={handleStartDateChange}
+                onChange={(date: Date | null) => {
+                  if (date) {
+                    handleStartDateChange(date);
+                  }
+                }}
                 locale={ko}
                 inline
                 maxDate={today}
@@ -645,7 +661,11 @@ const Record: React.FC = () => {
               </div>
               <DatePicker
                 selected={bookProgress.endDate ? new Date(bookProgress.endDate) : null}
-                onChange={handleEndDateChange}
+                onChange={(date: Date | null) => {
+                  if (date) {
+                    handleEndDateChange(date);
+                  }
+                }}
                 locale={ko}
                 inline
                 minDate={
