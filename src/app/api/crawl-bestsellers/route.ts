@@ -1,19 +1,27 @@
 import { NextResponse } from "next/server";
 import { Builder, By, until } from "selenium-webdriver";
-import { ServiceBuilder } from "selenium-webdriver/chrome";
+import chrome from "selenium-webdriver/chrome";
+import chromium from "@sparticuz/chromium";
 import { supabase } from "@/ts/supabase";
 
 export async function GET() {
   let driver;
   try {
-    const chromePath = "/opt/homebrew/bin/chromedriver"; // 실제 경로로 수정
-    console.log("ChromeDriver 경로:", chromePath);
+    // Vercel 환경에서 헤드리스 Chrome 설정
+    const options = new chrome.Options()
+      .addArguments("--headless") // 헤드리스 모드
+      .addArguments("--no-sandbox") // 서버리스 환경 필수
+      .addArguments("--disable-dev-shm-usage") // 메모리 문제 방지
+      .addArguments("--disable-gpu") // GPU 비활성화
+      .addArguments("--disable-setuid-sandbox");
 
-    const service = new ServiceBuilder(chromePath);
-    driver = await new Builder()
-      .forBrowser("chrome")
-      .setChromeService(service)
-      .build();
+    // @sparticuz/chromium에서 제공하는 Chrome 바이너리 사용
+    driver = await chromium.executablePath().then(path => {
+      return new Builder()
+        .forBrowser("chrome")
+        .setChromeOptions(new chrome.Options(options)) // chrome.Options로 변경
+        .build();
+    });
 
     const url =
       "https://search.shopping.naver.com/book/search?bookTabType=BEST_SELLER&catId=50005542&pageIndex=1&pageSize=40&query=%EB%B2%A0%EC%8A%A4%ED%8A%B8%EC%85%80%EB%9F%AC&sort=REL";
@@ -47,30 +55,28 @@ export async function GET() {
 
     // 한국 시간(KST)으로 created_at 추가
     const nowKST = new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
-    const booksWithKST = books.map(book => ({
+    const booksWithKST = books.map((book) => ({
       ...book,
-      created_at: nowKST
+      created_at: nowKST,
     }));
 
     if (booksWithKST.length > 0) {
-      // 기존 bestseller 테이블 데이터 모두 삭제
-      const { error: deleteError } = await supabase.from("bestseller").delete().neq('id', 0); // id는 절대 같을 수 없으므로 모든 행 삭제
+      const { error: deleteError } = await supabase.from("bestseller").delete().neq("id", 0);
       if (deleteError) throw new Error(`Supabase 삭제 오류: ${deleteError.message}`);
 
-      // 새로운 데이터 삽입
       const { error: insertError } = await supabase.from("bestseller").insert(booksWithKST);
       if (insertError) throw new Error(`Supabase 삽입 오류: ${insertError.message}`);
     }
 
     await driver.quit();
     return NextResponse.json({ message: "베스트셀러 크롤링 및 저장 성공", books: booksWithKST });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("크롤링 오류:", error);
     if (driver) await driver.quit();
     return NextResponse.json(
-      { 
-        message: "크롤링 중 오류 발생", 
-        error: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다"
+      {
+        message: "크롤링 중 오류 발생",
+        error: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다",
       },
       { status: 500 }
     );
