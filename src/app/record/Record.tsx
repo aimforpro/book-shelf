@@ -86,14 +86,14 @@ const Record: React.FC = () => {
           title,
           author,
           cover_url,
-          reading_records!book_id (
+          reading_records (
             id,
             start_date,
             end_date,
             progress,
             rating,
             memo,
-            shared_memos!record_id (
+            shared_memos (
               id,
               is_visible
             )
@@ -107,7 +107,13 @@ const Record: React.FC = () => {
       if (bookError) throw bookError;
 
       const readingRecord = bookData.reading_records?.length > 0 ? bookData.reading_records[0] : {};
-      const sharedMemo = readingRecord.shared_memos || {};
+      // shared_memos는 1:1 관계이므로 단일 객체로 처리
+      const sharedMemo = Array.isArray(readingRecord.shared_memos)
+        ? readingRecord.shared_memos[0] || {}
+        : readingRecord.shared_memos || {};
+      const isShared = sharedMemo.is_visible === "y";
+
+      console.log("Shared memo data:", sharedMemo, "isShared:", isShared);
 
       setBookProgress({
         book_id: bookData.id,
@@ -119,7 +125,7 @@ const Record: React.FC = () => {
         progress: readingRecord.progress ?? 0,
         rating: Math.min(Math.max(readingRecord.rating ?? 0, 0), 5),
         memo: readingRecord.memo || "",
-        isShared: sharedMemo.is_visible === "y",
+        isShared,
       });
 
       console.log("Fetched book data:", bookData);
@@ -143,7 +149,6 @@ const Record: React.FC = () => {
       return;
     }
 
-    // rating 값을 0~5로 제한
     const clampedRating = Math.max(0, Math.min(bookProgress.rating, 5));
 
     try {
@@ -166,7 +171,7 @@ const Record: React.FC = () => {
         start_date: bookProgress.startDate || null,
         end_date: bookProgress.endDate || null,
         progress: bookProgress.progress,
-        rating: bookProgress.rating,
+        rating: clampedRating,
         memo: bookProgress.memo,
         status: bookProgress.progress === 100 ? "completed" : "reading",
       };
@@ -191,9 +196,14 @@ const Record: React.FC = () => {
         recordId = data.id;
       }
 
+      // 9시간 더한 KST 시간 계산
+      const now = new Date();
+      const kstOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로 변환
+      const kstTime = new Date(now.getTime() + kstOffset).toISOString();
+
       const { data: existingSharedMemo } = await supabase
         .from("shared_memos")
-        .select("id")
+        .select("id, created_at")
         .eq("record_id", recordId)
         .single();
 
@@ -201,8 +211,11 @@ const Record: React.FC = () => {
         if (existingSharedMemo) {
           const { error: updateError } = await supabase
             .from("shared_memos")
-            .update({ is_visible: "y", shared_at: new Date().toISOString() })
-            .eq("record_id", recordId);
+            .update({
+              is_visible: "y",
+              shared_at: kstTime,
+            })
+            .eq("id", existingSharedMemo.id);
           if (updateError) throw updateError;
         } else {
           const { error: insertError } = await supabase
@@ -211,7 +224,6 @@ const Record: React.FC = () => {
               record_id: recordId,
               user_id: userData.id,
               is_visible: "y",
-              shared_at: new Date().toISOString(),
             });
           if (insertError) throw insertError;
         }
@@ -219,8 +231,11 @@ const Record: React.FC = () => {
         if (existingSharedMemo) {
           const { error: updateError } = await supabase
             .from("shared_memos")
-            .update({ is_visible: "n" })
-            .eq("record_id", recordId);
+            .update({
+              is_visible: "n",
+              shared_at: kstTime,
+            })
+            .eq("id", existingSharedMemo.id);
           if (updateError) throw updateError;
         }
       }
@@ -272,7 +287,6 @@ const Record: React.FC = () => {
     const ratingValue = (position / starWidth) * 5;
     const roundedRating = Math.round(ratingValue);
 
-    // 0~5 범위로 제한
     const clampedRating = Math.max(0, Math.min(roundedRating, 5));
     setBookProgress({ ...bookProgress, rating: clampedRating });
   };
