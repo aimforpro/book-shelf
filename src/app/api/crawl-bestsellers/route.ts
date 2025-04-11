@@ -7,27 +7,32 @@ import { supabase } from "@/ts/supabase";
 export async function GET() {
   let driver;
   try {
-    // Vercel 환경에서 헤드리스 Chrome 설정
-    const options = new chrome.Options()
+    // Chromium 설정
+    const chromeOptions = new chrome.Options()
       .addArguments("--headless") // 헤드리스 모드
       .addArguments("--no-sandbox") // 서버리스 환경 필수
-      .addArguments("--disable-dev-shm-usage") // 메모리 문제 방지
-      .addArguments("--disable-gpu") // GPU 비활성화
-      .addArguments("--disable-setuid-sandbox");
+      .addArguments("--disable-dev-shm-usage")
+      .addArguments("--disable-gpu")
+      .addArguments(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+      ); // 네이버 정책 우회
 
-    // @sparticuz/chromium에서 제공하는 Chrome 바이너리 사용
-    driver = await chromium.executablePath().then(path => {
-      return new Builder()
-        .forBrowser("chrome")
-        .setChromeOptions(new chrome.Options(options)) // chrome.Options로 변경
-        .build();
-    });
+    // 디버깅용 로그 추가
+    console.log("Chromium 경로:", chromium.path);
+
+    // Selenium WebDriver 빌드 (ServiceBuilder 제거)
+    driver = await new Builder()
+      .forBrowser("chrome")
+      .setChromeOptions(chromeOptions)
+      .setChromeBinaryPath(chromium.path) // @sparticuz/chromium의 바이너리 경로
+      .build();
 
     const url =
       "https://search.shopping.naver.com/book/search?bookTabType=BEST_SELLER&catId=50005542&pageIndex=1&pageSize=40&query=%EB%B2%A0%EC%8A%A4%ED%8A%B8%EC%85%80%EB%9F%AC&sort=REL";
     console.log("페이지로 이동 중:", url);
     await driver.get(url);
 
+    // 페이지 로딩 대기
     await driver.wait(until.elementLocated(By.css("li[class*='bookListItem']")), 30000);
     console.log("책 목록 셀렉터 발견됨");
 
