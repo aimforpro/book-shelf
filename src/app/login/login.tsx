@@ -241,7 +241,7 @@ export default function Login() {
 
         <div className="pt-1 pr-4 pb-3 pl-4 flex flex-row gap-2 items-center justify-between w-full max-w-[480px]">
           <Link
-            href="#"
+            href="/forgot-password"
             className="text-[#a1824a] text-left font-['PlusJakartaSans-Regular'] text-sm leading-[21px] font-normal"
           >
             비밀번호를 잊으셨나요?

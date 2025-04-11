@@ -53,7 +53,19 @@ const Signup: React.FC = () => {
       setEmailError("유효한 이메일 형식이 아닙니다.");
       isValid = false;
     } else {
-      setEmailError("");
+      const localPart = email.split("@")[0];
+      if (localPart.length < 3) {
+        setEmailError("이메일 ID가 너무 짧습니다. 3자 이상 입력해주세요.");
+        isValid = false;
+      } else if (/^\d+$/.test(localPart)) {
+        setEmailError("이메일 ID는 숫자로만 구성될 수 없습니다.");
+        isValid = false;
+      } else if (/^(.)\1{2,}$/.test(localPart)) {
+        setEmailError("이메일 ID에 반복된 문자가过多합니다.");
+        isValid = false;
+      } else {
+        setEmailError("");
+      }
     }
 
     if (!password) {
