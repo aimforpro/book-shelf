@@ -78,6 +78,39 @@ const Record: React.FC = () => {
     };
   }, [showStartDatePicker, showEndDatePicker, showEmojiPicker]);
 
+  // 터치 이벤트에 passive: false 적용 (오류 해결)
+  useEffect(() => {
+    const ratingElement = ratingRef.current;
+    if (!ratingElement) return;
+
+    const handleTouchStartNative = (e: TouchEvent) => {
+      e.preventDefault(); // 기본 동작 방지 (스크롤 등)
+      setIsDragging(true);
+      calculateRating(e.touches[0].clientX);
+    };
+
+    const handleTouchMoveNative = (e: TouchEvent) => {
+      if (isDragging) {
+        calculateRating(e.touches[0].clientX);
+      }
+    };
+
+    const handleTouchEndNative = () => {
+      setIsDragging(false);
+    };
+
+    // passive: false로 터치 이벤트 등록
+    ratingElement.addEventListener("touchstart", handleTouchStartNative, { passive: false });
+    ratingElement.addEventListener("touchmove", handleTouchMoveNative, { passive: false });
+    ratingElement.addEventListener("touchend", handleTouchEndNative);
+
+    return () => {
+      ratingElement.removeEventListener("touchstart", handleTouchStartNative);
+      ratingElement.removeEventListener("touchmove", handleTouchMoveNative);
+      ratingElement.removeEventListener("touchend", handleTouchEndNative);
+    };
+  }, [isDragging]);
+
   const fetchBookData = async (bookId: number) => {
     try {
       const { data: userData, error: userError } = await supabase
@@ -122,8 +155,6 @@ const Record: React.FC = () => {
         : readingRecord.shared_memos || {};
       const isShared = sharedMemo.is_visible === "y";
 
-      console.log("Shared memo data:", sharedMemo, "isShared:", isShared);
-
       setBookProgress({
         book_id: bookData.id,
         title: bookData.title || "제목 없음",
@@ -136,8 +167,6 @@ const Record: React.FC = () => {
         memo: readingRecord.memo || "",
         isShared,
       });
-
-      console.log("Fetched book data:", bookData);
     } catch (err) {
       console.error("책 데이터 가져오기 실패:", err);
       showModal("책 데이터를 불러오는 데 실패했습니다.", "error");
@@ -208,9 +237,8 @@ const Record: React.FC = () => {
         recordId = data.id;
       }
 
-      // 9시간 더한 KST 시간 계산
       const now = new Date();
-      const kstOffset = 9 * 60 * 60 * 1000; // 9시간을 밀리초로 변환
+      const kstOffset = 9 * 60 * 60 * 1000;
       const kstTime = new Date(now.getTime() + kstOffset).toISOString();
 
       const { data: existingSharedMemo } = await supabase
@@ -294,23 +322,54 @@ const Record: React.FC = () => {
     if (!ratingRef.current) return;
 
     const rect = ratingRef.current.getBoundingClientRect();
-    const starWidth = rect.width / 5;
-    const position = Math.max(0, Math.min(clientX - rect.left, rect.width));
-    const ratingValue = (position / starWidth) * 5;
-    const roundedRating = Math.round(ratingValue);
+    const starCount = 5;
+    const starWidth = 24; // 각 별의 너비 (w-6 = 24px)
+    const gap = 4; // 별 간 간격 (gap-1 = 4px)
+    const totalStarsWidth = starCount * starWidth + (starCount - 1) * gap; // 136px
 
+    const starsLeft = rect.left + (rect.width - totalStarsWidth) / 2;
+    const starsRight = starsLeft + totalStarsWidth;
+
+    if (clientX < starsLeft || clientX > starsRight) {
+      return;
+    }
+
+    const position = clientX - starsLeft;
+    const ratingValue = (position / totalStarsWidth) * 5;
+    const roundedRating = Math.round(ratingValue * 2) / 2;
     const clampedRating = Math.max(0, Math.min(roundedRating, 5));
+
+    // console.log(
+    //   `clientX: ${clientX}, starsLeft: ${starsLeft}, starsRight: ${starsRight}, position: ${position}, ratingValue: ${ratingValue}, roundedRating: ${roundedRating}`
+    // );
     setBookProgress({ ...bookProgress, rating: clampedRating });
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    calculateRating(e.clientX);
+    e.preventDefault();
+    if (!ratingRef.current) return;
+
+    const rect = ratingRef.current.getBoundingClientRect();
+    const starWidth = 24;
+    const gap = 4;
+    const totalStarsWidth = 5 * starWidth + 4 * gap;
+    const starsLeft = rect.left + (rect.width - totalStarsWidth) / 2;
+
+    const position = e.clientX - starsLeft;
+    const starIndex = Math.floor(position / (starWidth + gap));
+
+    if (starIndex === 0 && position >= 0 && position <= starWidth) {
+      const rating = position < starWidth / 2 ? 0.5 : 1.0;
+      setBookProgress({ ...bookProgress, rating });
+    } else {
+      setIsDragging(true);
+      calculateRating(e.clientX);
+    }
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (isDragging) {
-      calculateRating(e.clientX);
+      requestAnimationFrame(() => calculateRating(e.clientX));
     }
   };
 
@@ -322,7 +381,9 @@ const Record: React.FC = () => {
     setIsDragging(false);
   };
 
+  // React 합성 이벤트는 네이티브 이벤트로 대체 (useEffect에서 처리)
   const handleTouchStart = (e: React.TouchEvent) => {
+    // useEffect에서 네이티브 이벤트로 처리하므로 여기서는 최소한의 로직만
     setIsDragging(true);
     calculateRating(e.touches[0].clientX);
   };
@@ -347,38 +408,24 @@ const Record: React.FC = () => {
     const maxStars = 5;
 
     for (let i = 1; i <= maxStars; i++) {
-      const isFull = bookProgress.rating >= i;
+      const rating = bookProgress.rating;
+      const isFull = rating >= i;
+      const isHalf = rating >= i - 0.5 && rating < i;
+      const fillPercentage = isFull ? 100 : isHalf ? 50 : 0;
 
       stars.push(
         <div
           key={i}
-          className="relative inline-block w-6 h-6"
-          style={{ overflow: "hidden" }}
+          className="relative inline-block w-6 h-6 text-gray-300"
+          style={{ fontSize: "24px" }}
         >
-          <Image
-            src="/assets/icons/star.svg"
-            alt="Star"
-            width={24}
-            height={24}
-            className="absolute top-0 left-0"
-          />
-          {isFull && (
-            <div
-              className="absolute top-0 left-0"
-              style={{ width: "100%", height: "100%", overflow: "hidden" }}
-            >
-              <Image
-                src="/assets/icons/star.svg"
-                alt="Filled Star"
-                width={24}
-                height={24}
-                style={{
-                  filter:
-                    "brightness(0) saturate(100%) invert(62%) sepia(68%) saturate(747%) hue-rotate(0deg) brightness(102%) contrast(101%)",
-                }}
-              />
-            </div>
-          )}
+          <span className="absolute top-0 left-0">☆</span>
+          <span
+            className="absolute top-0 left-0 text-yellow-400 overflow-hidden transition-all duration-100"
+            style={{ width: `${fillPercentage}%` }}
+          >
+            ★
+          </span>
         </div>
       );
     }
