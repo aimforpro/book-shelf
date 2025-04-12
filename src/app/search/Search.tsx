@@ -211,13 +211,15 @@ const Search: React.FC = () => {
                 key={index}
                 className="bg-[#FFFFFF] pt-3 px-4 pb-3 flex flex-row gap-4 items-start justify-start w-full"
               >
-                <div onClick={() => handleBookClick(book)} className="cursor-pointer">
+                <div onClick={() => handleBookClick(book)} 
+                className="cursor-pointer w-[79px] h-[106px]"
+                >
                   <Image
                     src={book.image}
                     alt={book.title}
                     width={79}
                     height={106}
-                    className="object-cover"
+                    className="object-cover w-full h-full"
                   />
                 </div>
                 <div className="flex flex-col gap-0 items-start justify-center flex-1 h-[104px]">
