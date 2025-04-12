@@ -11,10 +11,10 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // 디버깅용 로그 (운영 환경에서는 제거 가능)
-console.log("Supabase 연결 설정:", {
-  url: supabaseUrl,
-  anon_key: supabaseAnonKey.substring(0, 10) + "...",
-});
+// console.log("Supabase 연결 설정:", {
+//   url: supabaseUrl,
+//   anon_key: supabaseAnonKey.substring(0, 10) + "...",
+// });
 
 // Supabase 클라이언트 초기화
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
