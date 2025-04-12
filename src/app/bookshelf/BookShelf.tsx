@@ -318,15 +318,17 @@ const BookShelf: React.FC = () => {
           className="px-4 flex flex-row flex-wrap gap-4 items-start justify-start w-full min-w-[360px] max-w-[414px] mx-auto"
           onClick={handleContainerClick}
         >
-          {filteredBooks.length === 0 ? (
+          {books.length === 0 ? (
             <div className="flex flex-col items-center justify-center w-full h-[400px] gap-4">
               <p className="text-[#4A4A4A] font-['Pretendard'] text-base leading-6 text-center">
-              {searchQuery ? `'${searchQuery}'에 대한 검색 결과가 없습니다.` : (
-                <>
-                  책장이 비어 있어요.<br/>
-                  '책 추가' 버튼으로 책을 등록해보세요!
-                </>
-              )}
+                책장이 비어 있어요.<br/>
+                '책 추가' 버튼으로 책을 등록해보세요!
+              </p>
+            </div>
+          ) : filteredBooks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center w-full h-[400px] gap-4">
+              <p className="text-[#4A4A4A] font-['Pretendard'] text-base leading-6 text-center">
+                '{searchQuery}'에 대한 검색 결과가 없습니다.
               </p>
             </div>
           ) : (
