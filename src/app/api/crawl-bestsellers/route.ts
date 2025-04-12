@@ -1,38 +1,18 @@
 import { NextResponse } from "next/server";
 import { Builder, By, until } from "selenium-webdriver";
-import chrome from "selenium-webdriver/chrome";
-import chromium from "@sparticuz/chromium";
+import { ServiceBuilder } from "selenium-webdriver/chrome";
 import { supabase } from "@/ts/supabase";
 
 export async function GET() {
   let driver;
   try {
-    // Chromium 설정
-    const chromeOptions = new chrome.Options()
-      .addArguments("--headless")
-      .addArguments("--no-sandbox")
-      .addArguments("--disable-dev-shm-usage")
-      .addArguments("--disable-gpu")
-      .addArguments(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-      );
+    const chromePath = "/opt/homebrew/bin/chromedriver"; // 실제 경로로 수정
+    console.log("ChromeDriver 경로:", chromePath);
 
-    // 디버깅용 로그 추가
-    console.log("Chromium 설정 초기화 중...");
-
-    // 타입 단언으로 chromium.path 사용
-    const chromiumPath = (chromium as any).path || process.env.CHROME_BINARY_PATH;
-
-    if (!chromiumPath) {
-      throw new Error("Chromium 바이너리 경로를 찾을 수 없습니다.");
-    }
-
-    console.log("Chromium 경로:", chromiumPath);
-    // Selenium WebDriver 빌드
+    const service = new ServiceBuilder(chromePath);
     driver = await new Builder()
       .forBrowser("chrome")
-      .setChromeOptions(chromeOptions as chrome.Options)
-      .setChromeService(new chrome.ServiceBuilder(chromiumPath))
+      .setChromeService(service)
       .build();
 
     const url =
@@ -40,7 +20,6 @@ export async function GET() {
     console.log("페이지로 이동 중:", url);
     await driver.get(url);
 
-    // 페이지 로딩 대기
     await driver.wait(until.elementLocated(By.css("li[class*='bookListItem']")), 30000);
     console.log("책 목록 셀렉터 발견됨");
 
@@ -68,28 +47,30 @@ export async function GET() {
 
     // 한국 시간(KST)으로 created_at 추가
     const nowKST = new Date().toLocaleString("en-US", { timeZone: "Asia/Seoul" });
-    const booksWithKST = books.map((book) => ({
+    const booksWithKST = books.map(book => ({
       ...book,
-      created_at: nowKST,
+      created_at: nowKST
     }));
 
     if (booksWithKST.length > 0) {
-      const { error: deleteError } = await supabase.from("bestseller").delete().neq("id", 0);
+      // 기존 bestseller 테이블 데이터 모두 삭제
+      const { error: deleteError } = await supabase.from("bestseller").delete().neq('id', 0); // id는 절대 같을 수 없으므로 모든 행 삭제
       if (deleteError) throw new Error(`Supabase 삭제 오류: ${deleteError.message}`);
 
+      // 새로운 데이터 삽입
       const { error: insertError } = await supabase.from("bestseller").insert(booksWithKST);
       if (insertError) throw new Error(`Supabase 삽입 오류: ${insertError.message}`);
     }
 
     await driver.quit();
     return NextResponse.json({ message: "베스트셀러 크롤링 및 저장 성공", books: booksWithKST });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("크롤링 오류:", error);
     if (driver) await driver.quit();
     return NextResponse.json(
-      {
-        message: "크롤링 중 오류 발생",
-        error: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다",
+      { 
+        message: "크롤링 중 오류 발생", 
+        error: error instanceof Error ? error.message : "알 수 없는 오류가 발생했습니다"
       },
       { status: 500 }
     );

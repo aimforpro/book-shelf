@@ -19,6 +19,7 @@
 
 # production
 /build
+/api/crawl-bestsellers
 
 # misc
 .DS_Store
