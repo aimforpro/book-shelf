@@ -1,0 +1,21 @@
+{
+    "name": "책꽃이",
+    "short_name": "책꽃이",
+    "description": "당신의 책과 함께하는 모든 순간을 소중히",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ebba61",
+    "theme_color": "#ebba61",
+    "icons": [
+      {
+        "src": "/logo/192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+      },
+      {
+        "src": "/logo/512x512.png",
+        "sizes": "512x512",
+        "type": "image/png"
+      }
+    ]
+  }
