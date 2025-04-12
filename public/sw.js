@@ -1,8 +1,14 @@
 const CACHE_NAME = 'my-app-cache-v1';
 const urlsToCache = [
     '/',
-    '/assets/logo/192x192.png',
-    '/assets/logo/512x512.png'
+    '/icons/72.svg',
+    '/icons/96.svg',
+    '/icons/128.svg',
+    '/icons/144.svg',
+    '/icons/152.svg',
+    '/icons/192.svg',
+    '/icons/385.svg',
+    '/icons/512.svg'
   ];
 
 self.addEventListener('install', (event) => {

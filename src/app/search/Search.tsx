@@ -28,6 +28,7 @@ const Search: React.FC = () => {
   const [page, setPage] = useState<number>(1);
   const [hasMore, setHasMore] = useState<boolean>(true);
   const loaderRef = useRef<HTMLDivElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null); // 입력 필드 참조 추가
   const router = useRouter();
 
   useEffect(() => {
@@ -88,6 +89,7 @@ const Search: React.FC = () => {
     }
 
     setLoading(false);
+    inputRef.current?.blur(); // 검색 완료 후 키보드 내리기
   };
 
   const handleSearchClick = () => {
@@ -142,22 +144,12 @@ const Search: React.FC = () => {
 
   if (!user) {
     router.push("/unauthenticated");
-    return null; 
+    return null;
   }
 
   return (
     <div className="bg-[#FFFFFF] flex flex-col items-start justify-start min-h-screen">
       <div className="flex flex-col gap-0 items-start justify-start w-full min-h-screen relative overflow-hidden">
-        {/* 헤더 */}
-        <div className="bg-[#FFFFFF] pt-4 px-4 pb-2 flex flex-row items-center justify-between w-full h-[30px]">
-          {/* <h1 className="text-[#4A4A4A] text-left font-['Pretendard'] text-lg font-bold">
-            책 검색
-          </h1>
-          <div className="text-[#1C140D] font-['Pretendard'] text-sm">
-            {user.email}님
-          </div> */}
-        </div>
-
         {/* 검색 입력 */}
         <div className="bg-[#FFFFFF] pt-4 px-4 pb-2 flex flex-row items-center justify-between w-full">
           <div className="bg-[#FFFFFF] rounded-xl border border-[#E8DECF] p-[15px] flex flex-row gap-2 items-center w-full max-w-[358px] h-14">
@@ -168,11 +160,12 @@ const Search: React.FC = () => {
               height={24}
             />
             <input
+              ref={inputRef} // 입력 필드에 ref 연결
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={handleKeyPress}
-              onBlur={handleSearchClick} // 포커스 잃을 때 검색 실행
+              onBlur={handleSearchClick}
               placeholder="책 제목 검색"
               className="text-[#A1824A] font-['Pretendard'] text-base leading-6 w-full outline-none"
             />
@@ -207,12 +200,6 @@ const Search: React.FC = () => {
           </div>
         ) : books.length === 0 ? (
           <div className="flex flex-col items-center justify-center w-full h-[400px] gap-4">
-            {/* <Image
-              src="/assets/icons/no-results.svg"
-              alt="No Results"
-              width={100}
-              height={100}
-            /> */}
             <p className="text-[#4A4A4A] font-['Pretendard'] text-base leading-6 text-center">
               검색을 시작해보세요!
             </p>
